@@ -12,7 +12,7 @@
 #include <linux/i2c-dev.h> // struct i2c_msg
 #include <linux/i2c.h> // struct i2c_rdwr_ioctl_data
 
-void i2c_init(char *i2c_bus);
+int i2c_init();
 void i2c_close(void);
 
 unsigned char * i2c_read(unsigned char slave_addr, unsigned char reg, unsigned char NBytes);

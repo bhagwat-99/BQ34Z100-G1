@@ -1,8 +1,6 @@
 #include "i2c_custom.h"
 
 
-char *i2c_bus = "/dev/apalis-i2c1";
-
 unsigned char slave_address = 0x55;
 
 //register address to read and write data
@@ -17,8 +15,12 @@ unsigned char *data_to_read;
 
 int main()
 {
-        i2c_init(i2c_bus);
+        if(i2c_init()<0)
+        {
+                return -1;
+        }
 
+        //reading voltage
         reg = 0x08; 
         data_to_read = i2c_read(slave_address,reg,2);
         printf("%x\n",*data_to_read);

@@ -1,16 +1,21 @@
-
 #include "i2c_custom.h"
 
 int fd_i2c = -1; // i2c bus file descriptor
 
+//const char *i2c_bus = "/dev/apalis-i2c1";
+const char *i2c_bus = "/dev/colibri-i2c";
+
+
 unsigned char data_read[2];
 
-void i2c_init(char *i2c_bus)
+int i2c_init()
 {
     if ((fd_i2c = open(i2c_bus, O_RDWR)) < 0)
     {
-        printf("Failed to open apalis-i2c1.");
+        printf("Failed to open %s.",i2c_bus);
+        return -1;
     }
+    return 0;
 }
 
 void i2c_close(void) 
