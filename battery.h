@@ -1,5 +1,5 @@
-#ifndef I2C_CUSTOM_H
-#define I2C_CUSTOM_H
+#ifndef BATTERY_H
+#define BATTERY_H
 
 #include <stdio.h> // printf()
 #include <sys/types.h> // open()

@@ -1,4 +1,4 @@
-#include "i2c_custom.h"
+#include "battery.h"
 
 int fd_i2c = -1; // i2c bus file descriptor
 
