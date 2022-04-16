@@ -12,23 +12,7 @@ unsigned char data_to_write[32];
 //character pointer for access data read
 unsigned char *data_to_read;
 
-/*
-Check sum calculation
-The check sum is the sum of all 32 data bytes within the current data block, truncated to 8-bits and
-complemented. Example code to calculate the check sum follows:
-pData = a pointer to the data that was changed in the data block.
-nLength = length of the data block.
 
-*/
-unsigned char checksum(unsigned char *pData, unsigned char nLength)
-{
-unsigned char nSum = 0x00;
-unsigned char n;
-for (n = 0; n <nLength; n++)
-nSum += pData[n];
-nSum = 0xFF - nSum;
-return nSum;
-}
 int main()
 {
         if(i2c_init()<0)
@@ -36,49 +20,12 @@ int main()
                 return -1;
         }
 
-        // //unseal the gauge
-        // reg =0x00;
-        // data_to_write[0]=0x14;//lsb
-        // data_to_write[1]=0x04;//msb
-        // i2c_write(slave_address,reg, data_to_write,0x02);
-        // sleep(0.5);
+       
 
-        // reg =0x00;
-        // data_to_write[0]=0x72;//lsb
-        // data_to_write[1]=0x36;//msb
-        // i2c_write(slave_address,reg, data_to_write,0x02);
-        // sleep(0.5);
+        
 
-        // //full access the gauge
-        // unsigned char i=0;
-        // for(i=0;i<3;i++)
-        // {
-        //         reg =0x00;
-        //         data_to_write[0]=0xFF;//lsb
-        //         data_to_write[1]=0xFF;//msb
-        //         i2c_write(slave_address,reg, data_to_write,0x02);
-        //         sleep(0.2);
-        // }
-
-
-        // //enable block data control - 0x00 to 0x61
-        // reg =0x61;
-        // data_to_write[0]=0x00;
-        // i2c_write(slave_address,reg, data_to_write,0x01);
-        // sleep(0.2);
-
-        // //write subclass to 0x3E
-        // reg = 0x3E;
-        // data_to_write[0] = 0x68;
-        // i2c_write(slave_address,reg, data_to_write,0x01);
-        // sleep(0.2);
-
-        // //write offset to 0x3F
-        // reg = 0x3F;
-        // data_to_write[0] = 0x00;
-        // i2c_write(slave_address,reg, data_to_write,0x01);
-        // sleep(0.2);
-
+        
+        
         // //read 32 byte data from 0x40 to 0x5F
         // // 0x20 = 32 in decimal - read 32 bytes
         // reg = 0x40;
