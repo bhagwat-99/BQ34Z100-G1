@@ -6,7 +6,7 @@ int fd_i2c = -1; // i2c bus file descriptor
 const char *i2c_bus = "/dev/colibri-i2c";
 
 
-unsigned char data_read[2];
+unsigned char data_read[32];
 
 int i2c_init()
 {
@@ -61,7 +61,7 @@ int i2c_write(unsigned char slave_addr, unsigned char reg, unsigned char *data_t
 // Read the given I2C slave device's register and return the read value in `*result`:
 unsigned char * i2c_read(unsigned char slave_addr, unsigned char reg, unsigned char NBytes) 
 {
-    // +1 for Number of bytes + reg address 
+    // +1 -> Number of bytes + reg address 
     unsigned char data_write[NBytes+1];
 
     data_write[0]=reg;
