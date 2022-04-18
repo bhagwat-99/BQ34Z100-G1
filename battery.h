@@ -26,6 +26,15 @@
 #define TEMPERATURE             0x0C
 #define CURRENT                 0x10
 
+//extended data commands
+#define AVAILABLE_ENERGY        0x24    //10mW/h
+#define AVERAGE_POWER           0X26    //10mW
+#define INTERNAL_TEMPERATURE    0x2A    //0.1k
+#define PACK_CONFIGURATION      0x3A
+#define DESIGN_CAPACITY         0x3C    //0X3C
+
+
+
 //control subcommands
 #define CONTROL_STATUS          0x0000 //return the status of key features
 #define DEVICE_TYPE             0x0001 //return the device type of 0x100(indicate BQ34Z100-G1)
