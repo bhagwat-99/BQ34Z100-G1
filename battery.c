@@ -220,7 +220,15 @@ void set_vdivider(uint16_t v_divider)
     uint8_t msb = v_divider >> 8 ;
     uint8_t lsb = v_divider & 0x00FF;
 
-    p_return_value = read_flash_block(0x)
+    p_return_value = read_flash_block(0x68,0x0e);
+    
+    for(uint8_t i = 0; i < 32; i++)
+    {
+        battery_data_write[i] = *(p_return_value+i);
+    }
+
+    
+
 }
 
 
