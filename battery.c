@@ -137,7 +137,10 @@ uint8_t checksum()
         unsigned char checksum_value = 0x00;
         unsigned char n;
         for (n = 0; n < 32; n++)
-        checksum_value += battery_data_write[n];
+        {
+            checksum_value += battery_data_write[n];
+        }
+
         checksum_value = 0xFF - checksum_value;
 
         //write checksum to address 0x60
@@ -189,7 +192,7 @@ uint8_t write_flash_block(uint8_t sub_class, uint8_t offset)
     battery_data_write[0] =  sub_class ; //lsb
     battery_data_write[1] =  offset/32 ; //msb
     i2c_write(SLAVE_ADDR, CONTROL, battery_data_write, n_bytes);
-    sleep(0.001);
+    sleep(0.2);
 
 
     //write data to 0x40 address
@@ -207,10 +210,56 @@ uint8_t write_flash_block(uint8_t sub_class, uint8_t offset)
 //read voltage divider
 uint16_t readVDivider()
 {
-    uint16_t voltage_divider;
     p_return_value = read_flash_block(0x68, 0x0e);
-    voltage_divider = (uint16_t)(*(p_return_value + 14)) << 8 | *(p_return_value + 15);
-    return voltage_divider;
+    return (uint16_t)(*(p_return_value + 14)) << 8 | *(p_return_value + 15);
+
+}
+
+//read pack_configuration
+uint16_t read_pack_configuration()
+{
+    p_return_value = read_flash_block(0x40, 0x00);
+    return (uint16_t)(*(p_return_value + 0)) << 8 | *(p_return_value + 1);
+
+}
+
+//read design capacity
+uint16_t read_design_capacity()
+{
+    p_return_value = read_flash_block(0x30, 0x0b);
+    return (uint16_t)(*(p_return_value + 11)) << 8 | *(p_return_value + 12);
+
+}
+
+//read design energy
+uint16_t read_design_energy()
+{
+    p_return_value = read_flash_block(0x30, 0x0d);
+    return (uint16_t)(*(p_return_value + 13)) << 8 | *(p_return_value + 14);
+
+}
+
+//read flash_update_ok_voltage
+uint16_t read_flash_update_ok_voltage()
+{
+    p_return_value = read_flash_block(0x44, 0x00);
+    return (uint16_t)(*(p_return_value + 0)) << 8 | *(p_return_value + 1);
+
+}
+
+//read no. of cell
+uint8_t read_number_of_cell()
+{
+    p_return_value = read_flash_block(0x40, 0x07);
+    return  *(p_return_value+7);
+
+}
+
+//read design energy scale
+uint8_t read_design_energy_scale()
+{
+    p_return_value = read_flash_block(0x30, 0x1e);
+    return  *(p_return_value+30);
 
 }
 
@@ -227,14 +276,127 @@ void set_vdivider(uint16_t v_divider)
         battery_data_write[i] = *(p_return_value+i);
     }
 
-    
+    battery_data_write[14] = msb; //msb
+    battery_data_write[15] = lsb; //lsb
 
+    write_flash_block(0x68, 0x0e);
 }
 
 
 //set series cell
+void set_series_cell(uint8_t series_cell)
+{
 
-//set cell capacity
+    p_return_value = read_flash_block(0x40,0x07);
+    
+    for(uint8_t i = 0; i < 32; i++)
+    {
+        battery_data_write[i] = *(p_return_value+i);
+    }
+
+    battery_data_write[7] = series_cell; //number of series cell
+    
+
+    write_flash_block(0x40, 0x07);
+
+    
+}
+
+//set design capacity
+void set_design_capacity(uint16_t design_capacity)
+{
+    uint8_t msb = design_capacity >> 8 ;
+    uint8_t lsb = design_capacity & 0x00FF;
+
+    p_return_value = read_flash_block(0x30,0x0b);
+    
+    for(uint8_t i = 0; i < 32; i++)
+    {
+        battery_data_write[i] = *(p_return_value+i);
+    }
+
+    battery_data_write[11] = msb; //msb
+    battery_data_write[12] = lsb; //lsb
+
+    write_flash_block(0x30, 0x0b);
+}
+
+//set design energy scale
+void set_design_energy_scale(uint8_t design_energy_scale)
+{
+   
+    p_return_value = read_flash_block(0x30,0x1e);
+    
+    for(uint8_t i = 0; i < 32; i++)
+    {
+        battery_data_write[i] = *(p_return_value+i);
+    }
+
+    battery_data_write[30] = design_energy_scale;//design_energy_scale = 10
+
+    write_flash_block(0x30, 0x1e);
+}
+
+//set design energy
+void set_design_energy(uint16_t design_energy)
+{
+    uint8_t msb = design_energy >> 8 ;
+    uint8_t lsb = design_energy & 0x00FF;
+
+    p_return_value = read_flash_block(0x30,0x0d);
+    
+    for(uint8_t i = 0; i < 32; i++)
+    {
+        battery_data_write[i] = *(p_return_value+i);
+    }
+
+    battery_data_write[13] = msb; //msb
+    battery_data_write[14] = lsb; //lsb
+
+    write_flash_block(0x30, 0x0d);
+}
+
+//set VOLTSEL BIT in pack_configuration register
+void set_voltsel()
+{   
+    uint16_t pack_configuration = read_pack_configuration();
+    pack_configuration = pack_configuration | 0x0800;
+
+    uint8_t msb = pack_configuration >> 8 ;
+    uint8_t lsb = pack_configuration & 0x00FF;
+
+    p_return_value = read_flash_block(0x40,0x00);
+    
+    for(uint8_t i = 0; i < 32; i++)
+    {
+        battery_data_write[i] = *(p_return_value+i);
+    }
+
+    battery_data_write[13] = msb; //msb
+    battery_data_write[14] = lsb; //lsb
+
+    write_flash_block(0x30, 0x0d);
+}
+
+
+//set flash update ok cell volt
+void set_flash_update_ok_voltage(uint16_t flash_update_ok_voltage)
+{
+    uint8_t msb = flash_update_ok_voltage >> 8 ;
+    uint8_t lsb = flash_update_ok_voltage & 0x00FF;
+
+    p_return_value = read_flash_block(0x44,0x00);
+    
+    for(uint8_t i = 0; i < 32; i++)
+    {
+        battery_data_write[i] = *(p_return_value+i);
+    }
+
+    battery_data_write[0] = 0x05; //msb
+    battery_data_write[1] = 0xdc; //lsb
+
+    write_flash_block(0x44, 0x00);
+}
 
 
 //get soc

@@ -5,8 +5,8 @@
 int fd_i2c = -1;
 
 //char array to store read value
-unsigned char i2c_data_read[32];
-unsigned char i2c_data_write[32];
+unsigned char i2c_data_read[35];
+unsigned char i2c_data_write[35];
 
 
 int i2c_init(char *i2c_bus)
