@@ -450,30 +450,30 @@ uint16_t internal_temperature()
 }
 
 //get temperature 0.1K
-uint16_t temperature()
+float temperature()
 {
     p_return_value = (i2c_read(SLAVE_ADDR,TEMPERATURE,0x01));
-    return (uint16_t)(*(p_return_value+1)) << 8 | *p_return_value ;
+    return (float)((uint16_t)(*(p_return_value+1)) << 8 | *p_return_value );
 }
 
 //get voltage mV
-uint16_t voltage()
+float voltage()
 {
     p_return_value = (i2c_read(SLAVE_ADDR,VOLTAGE,0x02));
-    return (uint16_t)(*(p_return_value+1)) << 8 | *p_return_value ;
+    return (float)((uint16_t)(*(p_return_value+1)) << 8 | *p_return_value );
 }
 
 //get current in mA
-uint16_t current()
+float current()
 {
     p_return_value = (i2c_read(SLAVE_ADDR,CURRENT,0x02));
-    return (uint16_t)(*(p_return_value+1)) << 8 | *p_return_value ;
+    return (float)((uint16_t)(*(p_return_value+1)) << 8 | *p_return_value) ;
 }
 
 
 //get average current mA
-uint16_t average_current()
+float average_current()
 {
     p_return_value = (i2c_read(SLAVE_ADDR,AVERAGE_CURRENT,0x02));
-    return (uint16_t)(*(p_return_value+1)) << 8 | *p_return_value ;
+    return (float)((uint16_t)(*(p_return_value+1)) << 8 | *p_return_value) ;
 }
