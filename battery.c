@@ -33,7 +33,7 @@ void gauge_unseal()
         reg_addr =0x00;
         reg_data[0]=0x72;//lsb
         reg_data[1]=0x36;//msb
-        return_value = i2c_write(SLAVE_ADDR,reg_addr, reg_data,0x02);
+        return_value = i2c_write(SLAVE_ADDR,reg_addr, reg_data,n_bytes);
         if (return_value < 0 )
         {
             perror("gauge seal failed");
@@ -45,12 +45,13 @@ void gauge_unseal()
 void gauge_full_access()
 {
     unsigned char i=0;
+    n_bytes = 2;
     for(i=0;i<3;i++)
     {
         reg_addr =0x00;
-        reg_data[0]=0x72;//lsb
-        reg_data[1]=0x36;//msb
-        return_value = i2c_write(SLAVE_ADDR,reg_addr, reg_data,0x02);
+        reg_data[0]=0xFF;//lsb
+        reg_data[1]=0xFF;//msb
+        return_value = i2c_write(SLAVE_ADDR,reg_addr, reg_data,n_bytes);
         if (return_value < 0 )
         {
             perror("full access failed");
@@ -93,10 +94,11 @@ void offset_calibration()
 //enable accessing block data
 void enable_block_data_control()
 {
-    unsigned char reg_addr =0x61;
+    reg_addr =0x61;
     reg_data[0]=0x00;
+    n_bytes = 1;
  
-    return_value = i2c_write(SLAVE_ADDR,reg_addr, reg_data,0x01);
+    return_value = i2c_write(SLAVE_ADDR,reg_addr, reg_data,n_bytes);
     if (return_value < 0 )
     {
         perror("block data enable failed");
@@ -113,6 +115,7 @@ uint16_t  read_control(uint16_t control_subcommand)
     return_value = i2c_write(SLAVE_ADDR, CONTROL, reg_data, n_bytes);
     sleep(0.2);
     p_return_value = i2c_read(SLAVE_ADDR, CONTROL, n_bytes);
+    sleep(0.2);
 
     return (uint16_t)((uint16_t)(*(p_return_value+1)) << 8 | *p_return_value) ;
 }
@@ -140,7 +143,7 @@ uint8_t checksum()
         reg_addr = 0x60;
         n_bytes = 0x01;
         reg_data[0]=checksum_value;
-        printf("checksum : %x",checksum_value);
+        //printf("checksum : %x",checksum_value);
         return_value = i2c_write(SLAVE_ADDR,reg_addr, reg_data,n_bytes);
         if (return_value < 0 )
         {
@@ -445,24 +448,27 @@ float temperature()
 }
 
 //get voltage mV
-float voltage()
+uint16_t voltage()
 {
     p_return_value = (i2c_read(SLAVE_ADDR,VOLTAGE,0x02));
-    return (float)((uint16_t)(*(p_return_value+1)) << 8 | *p_return_value );
+    uint16_t voltage_value = *(p_return_value+1) << 8 | *p_return_value;
+    return voltage_value;
 }
 
 //get current in mA
-float current()
+int16_t current()
 {
     p_return_value = (i2c_read(SLAVE_ADDR,CURRENT,0x02));
-    return (float)((uint16_t)(*(p_return_value+1)) << 8 | *p_return_value );
+    int16_t current_value = *(p_return_value+1) << 8 | *p_return_value;
+    return current_value;
 
 }
 
 
 //get average current mA
-float average_current()
+int16_t average_current()
 {
     p_return_value = (i2c_read(SLAVE_ADDR,AVERAGE_CURRENT,0x02));
-    return (float)((uint16_t)(*(p_return_value+1)) << 8 | *p_return_value) ;
+    int16_t current_value = *(p_return_value+1) << 8 | *p_return_value;
+    return current_value;
 }

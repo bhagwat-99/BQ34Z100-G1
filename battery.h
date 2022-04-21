@@ -1,5 +1,5 @@
 #ifndef BATTERY_H
-#define BATTERY_
+#define BATTERY_H
 
 #include <stdio.h> // printf()
 #include <sys/types.h> // open()
@@ -130,11 +130,11 @@ float internal_temperature();
 
 float temperature();
 
-float voltage();
+uint16_t voltage();
 
-float current();
+int16_t current();
 
-float average_current();
+int16_t average_current();
 
 
 #endif
