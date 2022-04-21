@@ -1,6 +1,12 @@
 #include "battery.h"
+#include "I2C.h"
 
-const char *i2c_bus = "/dev/apalis-i2c1";
+char *i2c_bus = "/dev/i2c-0";
+
+unsigned char data[32];
+unsigned char * p_data;
+unsigned char ret_value;
+
 
 int main()
 {
@@ -9,7 +15,11 @@ int main()
                 return -1;
         }
 
-        printf("current : %f\n",current());
+        p_data = read_flash_block(0x30,0x00);
+        for(uint8_t i=0 ; i< 32; i++)
+        {
+                printf("i= %d : %x\n",i,*(p_data+i));
+        }
 
         i2c_close(i2c_bus);
         return 0;

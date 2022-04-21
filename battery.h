@@ -57,4 +57,84 @@
 typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 
+
+void gauge_seal();
+
+void gauge_unseal();
+
+void gauge_full_access();
+
+void reset_guage();
+
+uint16_t board_offset();
+
+uint16_t cc_offset();
+
+uint16_t board_offset();
+
+void offset_calibration();
+
+void enable_block_data_control();
+
+uint16_t read_control(uint16_t control_subcommand);
+
+uint8_t checksum();
+
+unsigned char * read_flash_block(uint8_t sub_class, uint8_t offset);
+
+uint8_t write_flash_block(uint8_t sub_class, uint8_t offset);
+
+uint16_t readVDivider();
+
+uint16_t read_pack_configuration();
+
+uint16_t read_design_capacity();
+
+uint16_t read_design_energy();
+
+uint16_t read_flash_update_ok_voltage();
+
+uint8_t read_number_of_cell();
+
+uint8_t read_design_energy_scale();
+
+void set_vdivider(uint16_t v_divider);
+
+void set_series_cell(uint8_t series_cell);
+
+void set_design_capacity(uint16_t design_capacity);
+
+void set_design_energy_scale(uint8_t design_energy_scale);
+
+void set_design_energy(uint16_t design_energy);
+
+void set_voltsel();
+
+void set_flash_update_ok_voltage(uint16_t flash_update_ok_voltage);
+
+uint8_t soc();
+
+uint16_t enable_calibration();
+
+uint16_t enter_calibration();
+
+uint16_t calibration_exit();
+
+uint16_t it_enable();
+
+uint16_t control_status();
+
+uint16_t device_type();
+
+float internal_temperature();
+
+float temperature();
+
+float voltage();
+
+float current();
+
+float average_current();
+
+
 #endif
