@@ -1,11 +1,14 @@
 #include "battery.h"
 #include "I2C.h"
 
+
+// for apalis imx8 
 char *i2c_bus = "/dev/apalis-i2c1";
 
-unsigned char data[32];
-unsigned char *p_data;
-unsigned char ret_value;
+//for colibri imx6uul
+//char *i2c_bus = "/dev/i2c-0";
+
+
 
 int main()
 {
@@ -36,12 +39,16 @@ int main()
         sleep(1);
         printf("voltsel bit : %d \n", read_voltsel);
 
+        //set series cell
+        printf("series cell : %d \n", read_series_cell);
+        set_series_cell(4);
+        sleep(1);        
+        printf("series cell : %d \n", read_series_cell);
+
         // voltage divider
         // default : 5000
         // Updated
         // 32v - 37364
-        // 16v -
-        // 48v -
         printf("vdivider : %d \n", readVDivider());
         set_vdivider(37364);
         sleep(1);
@@ -49,25 +56,22 @@ int main()
 
         // design capacity default : 1000 updated : 20000
         printf("design capacity : %d\n", read_design_capacity());
+        set_design_capacity(20000);
+        sleep(1);
+        printf("design capacity : %d\n", read_design_capacity());
 
-        // printf("design energy : %d\n",read_design_energy());
+        
+        // design energy scale default : 1 updated : 10
+        printf("design energy scale : %d\n",read_design_energy_scale());
+        set_design_energy_scale(10);
+        sleep(1);
+        printf("design energy scale : %d\n",read_design_energy_scale());
 
-        // printf("ok voltage : %d\n",read_flash_update_ok_voltage());
-
-        // printf("series cell : %d\n",read_number_of_cell());
-
-        // printf("design energy scale : %d\n",read_design_energy_scale());
-        //  printf("vdivider %d\n",read_design_energy());
-
-        // set_design_energy(25200);
-
-        // sleep(1);
-
-        // printf("current %d mA\n",current());
-
-        // printf("voltage %d mV\n",voltage());
-
-        // printf("average current %d mA\n",average_current());
+        // design energy default :      updated : 25200
+        printf("design energy : %d\n",read_design_energy());
+        set_design_energy(25200);
+        sleep(1);
+        printf("design energy : %d\n",read_design_energy());
 
         i2c_close(i2c_bus);
         return 0;

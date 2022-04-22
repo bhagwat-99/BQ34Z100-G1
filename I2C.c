@@ -9,6 +9,9 @@ unsigned char i2c_data_read[35];
 unsigned char i2c_data_write[35];
 
 
+
+// i2c initialize
+//i2c_bus - i2c adapter
 int i2c_init(char *i2c_bus)
 {
     if ((fd_i2c = open(i2c_bus, O_RDWR)) < 0)
@@ -19,6 +22,9 @@ int i2c_init(char *i2c_bus)
     return 0;
 }
 
+
+// close the i2c bus
+//i2c_bus - i2c adaper 
 int i2c_close(char *i2c_bus) 
 {
     if (close(fd_i2c) < 0)
