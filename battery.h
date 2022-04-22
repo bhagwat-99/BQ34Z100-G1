@@ -88,7 +88,7 @@ uint16_t readVDivider();
 
 uint16_t read_pack_configuration();
 
-uint8_t read_voltsel()
+uint8_t read_voltsel();
 
 uint16_t read_design_capacity();
 
