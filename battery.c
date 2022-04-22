@@ -16,7 +16,7 @@ void gauge_seal()
     read_control(SEALED);
 }
 
-//unseal the gauge before read/write
+//unseal the gauge before read/writez
 void gauge_unseal()
 {
         reg_addr = 0x00;
@@ -48,6 +48,15 @@ void gauge_full_access()
     n_bytes = 2;
     for(i=0;i<3;i++)
     {
+        reg_addr =0x00;
+        reg_data[0]=0xFF;//lsb
+        reg_data[1]=0xFF;//msb
+        return_value = i2c_write(SLAVE_ADDR,reg_addr, reg_data,n_bytes);
+        if (return_value < 0 )
+        {
+            perror("full access failed");
+        }
+
         reg_addr =0x00;
         reg_data[0]=0xFF;//lsb
         reg_data[1]=0xFF;//msb
@@ -110,23 +119,19 @@ void enable_block_data_control()
 uint16_t  read_control(uint16_t control_subcommand)
 {
     n_bytes = 2;
+    // uint16_t return_value;
     reg_data[0] = control_subcommand & 0x00FF; //lsb
     reg_data[1] = control_subcommand >> 8; //msb
     return_value = i2c_write(SLAVE_ADDR, CONTROL, reg_data, n_bytes);
     sleep(0.2);
     p_return_value = i2c_read(SLAVE_ADDR, CONTROL, n_bytes);
-    sleep(0.2);
 
-    return (uint16_t)((uint16_t)(*(p_return_value+1)) << 8 | *p_return_value) ;
+    return_value = ((uint16_t)(*(p_return_value+1)) << 8 | *p_return_value) ;
+
+    return return_value;
 }
 
-/*
-Check sum calculation
-The check sum is the sum of all 32 data bytes within the current data block, truncated to 8-bits and complemented. 
-pData = a pointer to the data that was changed in the data block.
-nLength = length of the data block.
 
-*/
 //unsigned char checksum(unsigned char *pData, unsigned char nLength)
 uint8_t checksum()
 {
@@ -203,6 +208,13 @@ uint8_t write_flash_block(uint8_t sub_class, uint8_t offset)
 }
 
 
+//read voltsel bit in pack configuration register
+uint8_t read_voltsel()
+{   
+    uint16_t pack_configuration = read_pack_configuration();
+    return (uint8_t)((pack_configuration & 0x0800) >> 11);
+}
+
 //read voltage divider
 uint16_t readVDivider()
 {
@@ -244,7 +256,7 @@ uint16_t read_flash_update_ok_voltage()
 }
 
 //read no. of cell
-uint8_t read_number_of_cell()
+uint8_t read_series_cell()
 {
     p_return_value = read_flash_block(0x40, 0x07);
     return  *(p_return_value+7);

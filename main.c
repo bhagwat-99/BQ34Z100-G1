@@ -1,7 +1,7 @@
 #include "battery.h"
 #include "I2C.h"
 
-char *i2c_bus = "/dev/i2c-0";
+char *i2c_bus = "/dev/apalis-i2c1";
 
 unsigned char data[32];
 unsigned char * p_data;
@@ -15,24 +15,26 @@ int main()
                 return -1;
         }
 
-        // p_data = read_flash_block(0x30,0x00);
-        // for(uint8_t i=0 ; i< 32; i++)
-        // {
-        //         printf("i= %d : %x\n",i,*(p_data+i));
-        // }
+        gauge_unseal();
+        printf("unseal done\n");
+        printf("%x\n",control_status());
 
-        // reset_guage();
-        // printf("rset done\n");
-        // sleep(1);
-        // gauge_seal();
-        // printf("seal done\n");
-        // sleep(1);
-        // gauge_unseal();
-        // printf("unseal done\n");
-        // sleep(1);
-        // gauge_full_access();
-        // printf("full access done\n");
-        // sleep(1);
+        gauge_full_access();
+        printf("full access done\n");
+        printf("%x\n",control_status());
+
+        reset_guage();
+        printf("rset done\n");
+        printf("%x\n",control_status());
+
+        gauge_unseal();
+        printf("unseal done\n");
+        printf("%x\n",control_status());
+
+        gauge_full_access();
+        printf("full access done\n");
+        printf("%x\n",control_status());
+        
 
         //enable_block_data_control();
         // printf("enabled block data");
@@ -56,11 +58,13 @@ int main()
 
         // sleep(1);
 
-        printf("current %d mA\n",current());
 
-        printf("voltage %d mV\n",voltage());
 
-        printf("average current %d mA\n",average_current());
+        // printf("current %d mA\n",current());
+
+        // printf("voltage %d mV\n",voltage());
+
+        // printf("average current %d mA\n",average_current());
 
 
         i2c_close(i2c_bus);

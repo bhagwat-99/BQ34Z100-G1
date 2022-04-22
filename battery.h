@@ -88,13 +88,15 @@ uint16_t readVDivider();
 
 uint16_t read_pack_configuration();
 
+uint8_t read_voltsel()
+
 uint16_t read_design_capacity();
 
 uint16_t read_design_energy();
 
 uint16_t read_flash_update_ok_voltage();
 
-uint8_t read_number_of_cell();
+uint8_t read_series_cell();
 
 uint8_t read_design_energy_scale();
 
@@ -125,6 +127,9 @@ uint16_t it_enable();
 uint16_t control_status();
 
 uint16_t device_type();
+
+
+//battery parameter fuctions
 
 float internal_temperature();
 
