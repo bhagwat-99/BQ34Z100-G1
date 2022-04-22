@@ -47,8 +47,11 @@ int main()
 
         // voltage divider
         // default : 5000
-        // Updated
+       
+        // 5v - 5000
+        // 16v - 19182
         // 32v - 37364
+        // 48v - 55545
         printf("vdivider : %d \n", readVDivider());
         set_vdivider(37364);
         sleep(1);
