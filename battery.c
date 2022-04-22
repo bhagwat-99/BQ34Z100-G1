@@ -2,28 +2,30 @@
 #include "I2C.h"
 
 //array to store the read and write data
-uint8_t reg_addr;
 uint8_t battery_data[32];
 
-uint8_t reg_data[4];
-uint16_t return_value;
-uint8_t * p_return_value;
-uint8_t n_bytes;//number of bytes to read and write
+//uint8_t reg_data[4];
+//uint16_t return_value;
+//uint8_t * p_return_value;
 
 
+// seal the gauge - don't execute the function if device already in sealed state
 void gauge_seal()
 {
     read_control(SEALED);
 }
 
-//unseal the gauge before read/writez
+//unseal the gauge before read/write
 void gauge_unseal()
 {
-        reg_addr = 0x00;
-        n_bytes = 0x02;
-        reg_data[0]=0x14;//lsb
-        reg_data[1]=0x04;//msb
-        return_value = i2c_write(SLAVE_ADDR,reg_addr, reg_data,n_bytes);
+        uint8_t reg_addr    =   0x00;
+        uint8_t n_bytes     =   0x02;
+
+        uint8_t reg_data[2];
+        reg_data[0]         =   0x14;   //lsb
+        reg_data[1]         =   0x04;   //msb
+
+        uint16_t    return_value   =  i2c_write(SLAVE_ADDR,reg_addr, reg_data,n_bytes);
         if (return_value < 0 )
         {
             perror("gauge seal failed");
@@ -33,6 +35,7 @@ void gauge_unseal()
         reg_addr =0x00;
         reg_data[0]=0x72;//lsb
         reg_data[1]=0x36;//msb
+
         return_value = i2c_write(SLAVE_ADDR,reg_addr, reg_data,n_bytes);
         if (return_value < 0 )
         {
@@ -44,27 +47,22 @@ void gauge_unseal()
 //full access mode of gauge. gauge must be in unsealed mode to full access mode
 void gauge_full_access()
 {
-    unsigned char i=0;
-    n_bytes = 2;
-    for(i=0;i<3;i++)
+    uint8_t n_bytes = 2;
+    for(uint8_t i=0;i<3;i++)
     {
-        reg_addr =0x00;
-        reg_data[0]=0xFF;//lsb
-        reg_data[1]=0xFF;//msb
-        return_value = i2c_write(SLAVE_ADDR,reg_addr, reg_data,n_bytes);
-        if (return_value < 0 )
-        {
-            perror("full access failed");
-        }
+        uint8_t reg_addr;
+        uint8_t reg_data[2];
 
         reg_addr =0x00;
         reg_data[0]=0xFF;//lsb
         reg_data[1]=0xFF;//msb
-        return_value = i2c_write(SLAVE_ADDR,reg_addr, reg_data,n_bytes);
-        if (return_value < 0 )
-        {
-            perror("full access failed");
-        }
+
+        i2c_write(SLAVE_ADDR,reg_addr, reg_data,n_bytes);
+
+        reg_addr =0x00;
+        reg_data[0]=0xFF;//lsb
+        reg_data[1]=0xFF;//msb
+        i2c_write(SLAVE_ADDR,reg_addr, reg_data,n_bytes);
         sleep(0.2);
     }
 
@@ -103,41 +101,44 @@ void offset_calibration()
 //enable accessing block data
 void enable_block_data_control()
 {
+    uint8_t reg_addr;
     reg_addr =0x61;
+
+    uint8_t reg_data[2];
     reg_data[0]=0x00;
-    n_bytes = 1;
+
+    uint8_t n_bytes = 1;
  
-    return_value = i2c_write(SLAVE_ADDR,reg_addr, reg_data,n_bytes);
-    if (return_value < 0 )
-    {
-        perror("block data enable failed");
-    }
+    i2c_write(SLAVE_ADDR,reg_addr, reg_data,n_bytes);
     sleep(0.2);
 }
 
 //read control command
 uint16_t  read_control(uint16_t control_subcommand)
 {
-    n_bytes = 2;
-    // uint16_t return_value;
+    uint8_t n_bytes = 2;
+    uint8_t reg_data[2];
+
     reg_data[0] = control_subcommand & 0x00FF; //lsb
     reg_data[1] = control_subcommand >> 8; //msb
-    return_value = i2c_write(SLAVE_ADDR, CONTROL, reg_data, n_bytes);
+
+    i2c_write(SLAVE_ADDR, CONTROL, reg_data, n_bytes);
     sleep(0.2);
-    p_return_value = i2c_read(SLAVE_ADDR, CONTROL, n_bytes);
 
-    return_value = ((uint16_t)(*(p_return_value+1)) << 8 | *p_return_value) ;
+    
+    uint8_t * p_return_value = i2c_read(SLAVE_ADDR, CONTROL, n_bytes);
 
-    return return_value;
+    return ((uint16_t)(*(p_return_value+1)) << 8 | *p_return_value) ;
+
 }
 
 
-//unsigned char checksum(unsigned char *pData, unsigned char nLength)
+
 uint8_t checksum()
 {
-        unsigned char checksum_value = 0x00;
-        unsigned char n;
-        for (n = 0; n < 32; n++)
+        uint8_t checksum_value = 0x00;
+
+        for (uint8_t n = 0; n < 32; n++)
         {
             checksum_value += battery_data[n];
         }
@@ -145,31 +146,33 @@ uint8_t checksum()
         checksum_value = 0xFF - checksum_value;
 
         //write checksum to address 0x60
-        reg_addr = 0x60;
-        n_bytes = 0x01;
-        reg_data[0]=checksum_value;
-        //printf("checksum : %x",checksum_value);
-        return_value = i2c_write(SLAVE_ADDR,reg_addr, reg_data,n_bytes);
-        if (return_value < 0 )
+        uint8_t reg_addr = 0x60;
+        uint8_t n_bytes = 0x01;
+        uint8_t reg_data[1];
+        reg_data[0] = checksum_value;
+
+        uint8_t return_value = i2c_write(SLAVE_ADDR,reg_addr, reg_data,n_bytes);
+        sleep(0.2);
+        if(return_value < 0 )
         {
             perror("failed to write checksum");
             return -1;
         }
-        sleep(0.2);
         return 0;
 
 }
 
 
 //read flash block
-unsigned  char * read_flash_block(uint8_t sub_class, uint8_t offset)
+uint8_t * read_flash_block(uint8_t sub_class, uint8_t offset)
 {
     //enable block data
     enable_block_data_control();
     
     //write subclass id and offset to 0x3e and 0x3f register
-    reg_addr = 0x3e;
-    n_bytes = 2;
+    uint8_t reg_addr = 0x3e;
+    uint8_t n_bytes = 2;
+    uint8_t reg_data[2];
     reg_data[0] =  sub_class ; //lsb
     reg_data[1] =  offset/32 ; //msb
     i2c_write(SLAVE_ADDR, reg_addr, reg_data, n_bytes);
@@ -182,16 +185,20 @@ unsigned  char * read_flash_block(uint8_t sub_class, uint8_t offset)
     sleep(0.2);
 }
 
+
+// write 32 byte flash data block
 uint8_t write_flash_block(uint8_t sub_class, uint8_t offset)
 {
     //write_reg(0x61, 0x00); // Block control
     enable_block_data_control();
 
     //write subclass id and offset to 0x3e and 0x3f register
-    reg_addr = 0x3e;
-    n_bytes = 2;
+    uint8_t reg_addr = 0x3e;
+    uint8_t n_bytes = 2;
+    uint8_t reg_data[2];
     reg_data[0] =  sub_class ; //lsb
     reg_data[1] =  offset/32 ; //msb
+
     i2c_write(SLAVE_ADDR, reg_addr,reg_data, n_bytes);
     sleep(0.2);
 
@@ -218,7 +225,7 @@ uint8_t read_voltsel()
 //read voltage divider
 uint16_t readVDivider()
 {
-    p_return_value = read_flash_block(0x68, 0x0e);
+    uint8_t * p_return_value = read_flash_block(0x68, 0x0e);
     return (uint16_t)(*(p_return_value + 14)) << 8 | *(p_return_value + 15);
 
 }
@@ -226,7 +233,7 @@ uint16_t readVDivider()
 //read pack_configuration
 uint16_t read_pack_configuration()
 {
-    p_return_value = read_flash_block(0x40, 0x00);
+    uint8_t * p_return_value = read_flash_block(0x40, 0x00);
     return (uint16_t)(*(p_return_value + 0)) << 8 | *(p_return_value + 1);
 
 }
@@ -234,7 +241,7 @@ uint16_t read_pack_configuration()
 //read design capacity
 uint16_t read_design_capacity()
 {
-    p_return_value = read_flash_block(0x30, 0x0b);
+    uint8_t * p_return_value = read_flash_block(0x30, 0x0b);
     return (uint16_t)(*(p_return_value + 11)) << 8 | *(p_return_value + 12);
 
 }
@@ -242,7 +249,7 @@ uint16_t read_design_capacity()
 //read design energy
 uint16_t read_design_energy()
 {
-    p_return_value = read_flash_block(0x30, 0x0d);
+    uint8_t * p_return_value = read_flash_block(0x30, 0x0d);
     return (uint16_t)(*(p_return_value + 13)) << 8 | *(p_return_value + 14);
 
 }
@@ -250,7 +257,7 @@ uint16_t read_design_energy()
 //read flash_update_ok_voltage
 uint16_t read_flash_update_ok_voltage()
 {
-    p_return_value = read_flash_block(0x44, 0x00);
+    uint8_t * p_return_value = read_flash_block(0x44, 0x00);
     return (uint16_t)(*(p_return_value + 0)) << 8 | *(p_return_value + 1);
 
 }
@@ -258,7 +265,7 @@ uint16_t read_flash_update_ok_voltage()
 //read no. of cell
 uint8_t read_series_cell()
 {
-    p_return_value = read_flash_block(0x40, 0x07);
+    uint8_t * p_return_value = read_flash_block(0x40, 0x07);
     return  *(p_return_value+7);
 
 }
@@ -266,7 +273,7 @@ uint8_t read_series_cell()
 //read design energy scale
 uint8_t read_design_energy_scale()
 {
-    p_return_value = read_flash_block(0x30, 0x1e);
+    uint8_t * p_return_value = read_flash_block(0x30, 0x1e);
     return  *(p_return_value+30);
 
 }
@@ -277,7 +284,7 @@ void set_vdivider(uint16_t v_divider)
     uint8_t msb = v_divider >> 8 ;
     uint8_t lsb = v_divider & 0x00FF;
 
-    p_return_value = read_flash_block(0x68,0x0e);
+    uint8_t * p_return_value = read_flash_block(0x68,0x0e);
     
     for(uint8_t i = 0; i < 32; i++)
     {
@@ -295,7 +302,7 @@ void set_vdivider(uint16_t v_divider)
 void set_series_cell(uint8_t series_cell)
 {
 
-    p_return_value = read_flash_block(0x40,0x07);
+    uint8_t * p_return_value = read_flash_block(0x40,0x07);
     
     for(uint8_t i = 0; i < 32; i++)
     {
@@ -316,7 +323,7 @@ void set_design_capacity(uint16_t design_capacity)
     uint8_t msb = design_capacity >> 8 ;
     uint8_t lsb = design_capacity & 0x00FF;
 
-    p_return_value = read_flash_block(0x30,0x0b);
+    uint8_t * p_return_value = read_flash_block(0x30,0x0b);
     
     for(uint8_t i = 0; i < 32; i++)
     {
@@ -333,7 +340,7 @@ void set_design_capacity(uint16_t design_capacity)
 void set_design_energy_scale(uint8_t design_energy_scale)
 {
    
-    p_return_value = read_flash_block(0x30,0x1e);
+    uint8_t * p_return_value = read_flash_block(0x30,0x1e);
     
     for(uint8_t i = 0; i < 32; i++)
     {
@@ -351,7 +358,7 @@ void set_design_energy(uint16_t design_energy)
     uint8_t msb = design_energy >> 8 ;
     uint8_t lsb = design_energy & 0x00FF;
 
-    p_return_value = read_flash_block(0x30,0x0d);
+    uint8_t * p_return_value = read_flash_block(0x30,0x0d);
     
     for(uint8_t i = 0; i < 32; i++)
     {
@@ -373,7 +380,7 @@ void set_voltsel()
     uint8_t msb = pack_configuration >> 8 ;
     uint8_t lsb = pack_configuration & 0x00FF;
 
-    p_return_value = read_flash_block(0x40,0x00);
+    uint8_t * p_return_value = read_flash_block(0x40,0x00);
     
     for(uint8_t i = 0; i < 32; i++)
     {
@@ -393,7 +400,7 @@ void set_flash_update_ok_voltage(uint16_t flash_update_ok_voltage)
     uint8_t msb = flash_update_ok_voltage >> 8 ;
     uint8_t lsb = flash_update_ok_voltage & 0x00FF;
 
-    p_return_value = read_flash_block(0x44,0x00);
+    uint8_t * p_return_value = read_flash_block(0x44,0x00);
     
     for(uint8_t i = 0; i < 32; i++)
     {
@@ -448,21 +455,21 @@ uint16_t control_status()
 //get internal temperature 0.1K
 float internal_temperature()
 {
-    p_return_value = (i2c_read(SLAVE_ADDR,INTERNAL_TEMPERATURE,0x02));
+    uint8_t * p_return_value = (i2c_read(SLAVE_ADDR,INTERNAL_TEMPERATURE,0x02));
     return (float)((uint16_t)(*(p_return_value+1)) << 8 | *p_return_value) ;
 }
 
 //get temperature 0.1K
 float temperature()
 {
-    p_return_value = (i2c_read(SLAVE_ADDR,TEMPERATURE,0x01));
+    uint8_t * p_return_value = (i2c_read(SLAVE_ADDR,TEMPERATURE,0x01));
     return (float)((uint16_t)(*(p_return_value+1)) << 8 | *p_return_value );
 }
 
 //get voltage mV
 uint16_t voltage()
 {
-    p_return_value = (i2c_read(SLAVE_ADDR,VOLTAGE,0x02));
+    uint8_t * p_return_value = (i2c_read(SLAVE_ADDR,VOLTAGE,0x02));
     uint16_t voltage_value = *(p_return_value+1) << 8 | *p_return_value;
     return voltage_value;
 }
@@ -470,7 +477,7 @@ uint16_t voltage()
 //get current in mA
 int16_t current()
 {
-    p_return_value = (i2c_read(SLAVE_ADDR,CURRENT,0x02));
+    uint8_t * p_return_value = (i2c_read(SLAVE_ADDR,CURRENT,0x02));
     int16_t current_value = *(p_return_value+1) << 8 | *p_return_value;
     return current_value;
 
@@ -480,7 +487,7 @@ int16_t current()
 //get average current mA
 int16_t average_current()
 {
-    p_return_value = (i2c_read(SLAVE_ADDR,AVERAGE_CURRENT,0x02));
+    uint8_t * p_return_value = (i2c_read(SLAVE_ADDR,AVERAGE_CURRENT,0x02));
     int16_t current_value = *(p_return_value+1) << 8 | *p_return_value;
     return current_value;
 }

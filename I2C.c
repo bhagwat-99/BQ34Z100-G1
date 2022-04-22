@@ -5,9 +5,7 @@
 int fd_i2c = -1;
 
 //char array to store read value
-unsigned char i2c_data_read[35];
-unsigned char i2c_data_write[35];
-
+unsigned char i2c_data[35];
 
 
 // i2c initialize
@@ -38,23 +36,23 @@ int i2c_close(char *i2c_bus)
 
 
 // Write to an I2C slave device's register:
-int i2c_write(unsigned char slave_addr, unsigned char reg, unsigned char *data_to_write, unsigned char NBytes)
+int i2c_write(unsigned char slave_addr, unsigned char reg, unsigned char *data, unsigned char NBytes)
 {
 
     struct i2c_msg msgs[1];
     struct i2c_rdwr_ioctl_data msgset[1];
 
-    i2c_data_write[0] = reg;
+    i2c_data[0] = reg;
 
     for(int i=1;i<=NBytes;i++)
     {
-        i2c_data_write[i] = *(data_to_write + (i-1));
+        i2c_data[i] = *(data + (i-1));
     }
 
     msgs[0].addr = slave_addr;
     msgs[0].flags = 0;// 0 for write 
     msgs[0].len = NBytes+1;
-    msgs[0].buf = i2c_data_write;
+    msgs[0].buf = i2c_data;
 
     msgset[0].msgs = msgs;
     msgset[0].nmsgs = 1;
@@ -72,7 +70,7 @@ int i2c_write(unsigned char slave_addr, unsigned char reg, unsigned char *data_t
 unsigned char * i2c_read(unsigned char slave_addr, unsigned char reg, unsigned char NBytes) 
 {
     
-    i2c_data_write[0]=reg;
+    i2c_data[0]=reg;
 
 
     struct i2c_msg msgs[2];
@@ -81,12 +79,12 @@ unsigned char * i2c_read(unsigned char slave_addr, unsigned char reg, unsigned c
     msgs[0].addr = slave_addr;
     msgs[0].flags = 0;
     msgs[0].len = 1;
-    msgs[0].buf = i2c_data_write;
+    msgs[0].buf = i2c_data;
 
     msgs[1].addr = slave_addr;
     msgs[1].flags = I2C_M_RD;
     msgs[1].len = NBytes;
-    msgs[1].buf = i2c_data_read;
+    msgs[1].buf = i2c_data;
 
     msgset[0].msgs = msgs;
     msgset[0].nmsgs = 2;
@@ -95,5 +93,5 @@ unsigned char * i2c_read(unsigned char slave_addr, unsigned char reg, unsigned c
         perror("ioctl(I2C_RDWR) in i2c_read");
     }
     
-    return i2c_data_read;
+    return i2c_data;
 }
