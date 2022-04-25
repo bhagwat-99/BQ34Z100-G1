@@ -4,11 +4,6 @@
 //array to store the read and write data
 uint8_t battery_data[32];
 
-//uint8_t reg_data[4];
-//uint16_t return_value;
-//uint8_t * p_return_value;
-
-
 // seal the gauge - don't execute the function if device already in sealed state
 void gauge_seal()
 {
