@@ -18,13 +18,13 @@ int main()
 
         // unseal the gauge - work when it is sealed
         gauge_unseal();
-        printf("unseal done\n");
-        printf("%x\n",control_status());
+        // printf("unseal done\n");
+        // printf("%x\n",control_status());
 
         // full access the gauge - it should be unsealed first
         gauge_full_access();
-        printf("full access done\n");
-        printf("%x\n",control_status());
+        // printf("full access done\n");
+        // printf("%x\n",control_status());
 
 
         // print current value in mA

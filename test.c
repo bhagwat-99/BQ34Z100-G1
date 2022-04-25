@@ -8,37 +8,34 @@ char *i2c_bus = "/dev/apalis-i2c1";
 //for colibri imx6uul
 //char *i2c_bus = "/dev/i2c-0";
 
+uint8_t * p_return_value;
+
+
 int main()
 {
-        // start the i2c bus
-        if(i2c_init(i2c_bus)<0)
+        if (i2c_init(i2c_bus) < 0)
         {
                 return -1;
         }
 
-        // unseal the gauge - work when it is sealed
+        // unseal the guage
         gauge_unseal();
         printf("unseal done\n");
-        printf("%x\n",control_status());
+        printf("%x\n", control_status());
 
-        // full access the gauge - it should be unsealed first
+        // full access of guage
         gauge_full_access();
         printf("full access done\n");
-        printf("%x\n",control_status());
+        printf("%x\n", control_status());
+
+        p_return_value = read_flash_block(0x68, 0x0e);
+
+        for(uint8_t i=0; i<32;i++)
+        {
+                printf("%d : %x \n",i,*(p_return_value+i));
+        }
 
 
-        // print current value in mA
-        printf("current %d mA\n",current());
-
-
-        // print average current in mV
-        printf("average current %d mA\n",average_current());
-
-
-        // print voltage in mV
-        printf("voltage %d mV\n",voltage());
-
-        // close the i2c bus
         i2c_close(i2c_bus);
-        return 0;
+
 }

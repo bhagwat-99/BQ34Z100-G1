@@ -30,7 +30,7 @@ void gauge_unseal()
         {
             perror("gauge seal failed");
         }
-        sleep(0.2);
+        sleep(0.4);
 
         reg_addr =0x00;
         reg_data[0]=0x72;//lsb
@@ -41,7 +41,7 @@ void gauge_unseal()
         {
             perror("gauge seal failed");
         }
-        sleep(0.2);
+        sleep(0.4);
 }
 
 //full access mode of gauge. gauge must be in unsealed mode to full access mode
@@ -63,7 +63,7 @@ void gauge_full_access()
         reg_data[0]=0xFF;//lsb
         reg_data[1]=0xFF;//msb
         i2c_write(SLAVE_ADDR,reg_addr, reg_data,n_bytes);
-        sleep(0.2);
+        sleep(0.4);
     }
 
 }
@@ -110,7 +110,7 @@ void enable_block_data_control()
     uint8_t n_bytes = 1;
  
     i2c_write(SLAVE_ADDR,reg_addr, reg_data,n_bytes);
-    sleep(0.2);
+    sleep(0.4);
 }
 
 //read control command
@@ -123,7 +123,7 @@ uint16_t  read_control(uint16_t control_subcommand)
     reg_data[1] = control_subcommand >> 8; //msb
 
     i2c_write(SLAVE_ADDR, CONTROL, reg_data, n_bytes);
-    sleep(0.2);
+    sleep(0.4);
 
     
     uint8_t * p_return_value = i2c_read(SLAVE_ADDR, CONTROL, n_bytes);
@@ -152,7 +152,7 @@ uint8_t checksum()
         reg_data[0] = checksum_value;
 
         uint8_t return_value = i2c_write(SLAVE_ADDR,reg_addr, reg_data,n_bytes);
-        sleep(0.2);
+        sleep(0.4);
         if(return_value < 0 )
         {
             perror("failed to write checksum");
@@ -176,13 +176,13 @@ uint8_t * read_flash_block(uint8_t sub_class, uint8_t offset)
     reg_data[0] =  sub_class ; //lsb
     reg_data[1] =  offset/32 ; //msb
     i2c_write(SLAVE_ADDR, reg_addr, reg_data, n_bytes);
-    sleep(0.2);
+    sleep(0.4);
     
     //read data from 0x40 address
     reg_addr = 0x40;
     n_bytes = 32;
     return i2c_read(SLAVE_ADDR, reg_addr, n_bytes);
-    sleep(0.2);
+    sleep(0.4);
 }
 
 
@@ -200,14 +200,14 @@ uint8_t write_flash_block(uint8_t sub_class, uint8_t offset)
     reg_data[1] =  offset/32 ; //msb
 
     i2c_write(SLAVE_ADDR, reg_addr,reg_data, n_bytes);
-    sleep(0.2);
+    sleep(0.4);
 
 
     //write data to 0x40 address
     reg_addr = 0x40;
     n_bytes = 32;
     i2c_write(SLAVE_ADDR, reg_addr, battery_data, n_bytes);
-    sleep(0.2);
+    sleep(0.4);
 
     //write checksum value to 0x60
     checksum();
@@ -216,10 +216,10 @@ uint8_t write_flash_block(uint8_t sub_class, uint8_t offset)
 
 
 //read voltsel bit in pack configuration register
-uint8_t read_voltsel()
+uint16_t read_voltsel()
 {   
-    uint16_t pack_configuration = read_pack_configuration();
-    return (uint8_t)((pack_configuration & 0x0800) >> 11);
+    return (read_pack_configuration() & 0x0800) >> 11;
+  
 }
 
 //read voltage divider
@@ -348,6 +348,8 @@ void set_design_energy_scale(uint8_t design_energy_scale)
     }
 
     battery_data[30] = design_energy_scale;//design_energy_scale = 10
+
+    printf("remain writing\n");
 
     write_flash_block(0x30, 0x1e);
 }
