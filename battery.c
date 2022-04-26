@@ -4,6 +4,8 @@
 //array to store the read and write data
 uint8_t battery_data[32];
 
+#define wait_time 0.2
+
 // seal the gauge - don't execute the function if device already in sealed state
 void gauge_seal()
 {
@@ -21,22 +23,23 @@ void gauge_unseal()
         reg_data[1]         =   0x04;   //msb
 
         uint16_t    return_value   =  i2c_write(SLAVE_ADDR,reg_addr, reg_data,n_bytes);
+        sleep(wait_time);
+
         if (return_value < 0 )
         {
             perror("gauge seal failed");
         }
-        sleep(0.4);
 
         reg_addr =0x00;
         reg_data[0]=0x72;//lsb
         reg_data[1]=0x36;//msb
 
         return_value = i2c_write(SLAVE_ADDR,reg_addr, reg_data,n_bytes);
+        sleep(wait_time);
         if (return_value < 0 )
         {
             perror("gauge seal failed");
         }
-        sleep(0.4);
 }
 
 //full access mode of gauge. gauge must be in unsealed mode to full access mode
@@ -53,12 +56,13 @@ void gauge_full_access()
         reg_data[1]=0xFF;//msb
 
         i2c_write(SLAVE_ADDR,reg_addr, reg_data,n_bytes);
+        sleep(wait_time);
 
         reg_addr =0x00;
         reg_data[0]=0xFF;//lsb
         reg_data[1]=0xFF;//msb
         i2c_write(SLAVE_ADDR,reg_addr, reg_data,n_bytes);
-        sleep(0.4);
+        sleep(wait_time);
     }
 
 }
@@ -96,16 +100,16 @@ void offset_calibration()
 //enable accessing block data
 void enable_block_data_control()
 {
-    uint8_t reg_addr;
-    reg_addr =0x61;
+    uint8_t n_bytes     =   1;
+    uint8_t reg_addr    =   0x61;
 
-    uint8_t reg_data[2];
+    uint8_t reg_data[1];
     reg_data[0]=0x00;
 
-    uint8_t n_bytes = 1;
- 
     i2c_write(SLAVE_ADDR,reg_addr, reg_data,n_bytes);
-    sleep(0.4);
+    sleep(wait_time);
+    
+
 }
 
 //read control command
@@ -118,10 +122,10 @@ uint16_t  read_control(uint16_t control_subcommand)
     reg_data[1] = control_subcommand >> 8; //msb
 
     i2c_write(SLAVE_ADDR, CONTROL, reg_data, n_bytes);
-    sleep(0.4);
+    sleep(wait_time);
 
-    
     uint8_t * p_return_value = i2c_read(SLAVE_ADDR, CONTROL, n_bytes);
+    sleep(wait_time);
 
     return ((uint16_t)(*(p_return_value+1)) << 8 | *p_return_value) ;
 
@@ -147,7 +151,7 @@ uint8_t checksum()
         reg_data[0] = checksum_value;
 
         uint8_t return_value = i2c_write(SLAVE_ADDR,reg_addr, reg_data,n_bytes);
-        sleep(0.4);
+        sleep(wait_time);
         if(return_value < 0 )
         {
             perror("failed to write checksum");
@@ -166,43 +170,54 @@ uint8_t * read_flash_block(uint8_t sub_class, uint8_t offset)
     
     //write subclass id and offset to 0x3e and 0x3f register
     uint8_t reg_addr = 0x3e;
-    uint8_t n_bytes = 2;
-    uint8_t reg_data[2];
-    reg_data[0] =  sub_class ; //lsb
-    reg_data[1] =  offset/32 ; //msb
+    uint8_t n_bytes = 1;
+    uint8_t reg_data[1];
+    reg_data[0] =  sub_class ;
     i2c_write(SLAVE_ADDR, reg_addr, reg_data, n_bytes);
-    sleep(0.4);
+    sleep(wait_time);
+
+    //write offset to 0x3f register
+    uint8_t reg_addr = 0x3f;
+    uint8_t n_bytes = 1;
+    reg_data[0] =  offset/32 ; //msb
+    i2c_write(SLAVE_ADDR, reg_addr, reg_data, n_bytes);
+    sleep(wait_time);
     
     //read data from 0x40 address
     reg_addr = 0x40;
     n_bytes = 32;
     return i2c_read(SLAVE_ADDR, reg_addr, n_bytes);
-    sleep(0.4);
+    sleep(wait_time);
 }
 
 
 // write 32 byte flash data block
 uint8_t write_flash_block(uint8_t sub_class, uint8_t offset)
 {
-    //write_reg(0x61, 0x00); // Block control
+    //enable block data
     enable_block_data_control();
-
+    
     //write subclass id and offset to 0x3e and 0x3f register
     uint8_t reg_addr = 0x3e;
-    uint8_t n_bytes = 2;
-    uint8_t reg_data[2];
-    reg_data[0] =  sub_class ; //lsb
-    reg_data[1] =  offset/32 ; //msb
+    uint8_t n_bytes = 1;
+    uint8_t reg_data[1];
+    reg_data[0] =  sub_class ;
+    i2c_write(SLAVE_ADDR, reg_addr, reg_data, n_bytes);
+    sleep(wait_time);
 
-    i2c_write(SLAVE_ADDR, reg_addr,reg_data, n_bytes);
-    sleep(0.4);
+    //write offset to 0x3f register
+    uint8_t reg_addr = 0x3f;
+    uint8_t n_bytes = 1;
+    reg_data[0] =  offset/32 ; //msb
+    i2c_write(SLAVE_ADDR, reg_addr, reg_data, n_bytes);
+    sleep(wait_time);
 
 
     //write data to 0x40 address
     reg_addr = 0x40;
     n_bytes = 32;
     i2c_write(SLAVE_ADDR, reg_addr, battery_data, n_bytes);
-    sleep(0.4);
+    sleep(wait_time);
 
     //write checksum value to 0x60
     checksum();
@@ -280,6 +295,7 @@ void set_vdivider(uint16_t v_divider)
     uint8_t lsb = v_divider & 0x00FF;
 
     uint8_t * p_return_value = read_flash_block(0x68,0x0e);
+    sleep(wait_time);
     
     for(uint8_t i = 0; i < 32; i++)
     {
@@ -290,6 +306,8 @@ void set_vdivider(uint16_t v_divider)
     battery_data[15] = lsb; //lsb
 
     write_flash_block(0x68, 0x0e);
+    sleep(wait_time);
+
 }
 
 
@@ -298,6 +316,7 @@ void set_series_cell(uint8_t series_cell)
 {
 
     uint8_t * p_return_value = read_flash_block(0x40,0x07);
+    sleep(wait_time);
     
     for(uint8_t i = 0; i < 32; i++)
     {
@@ -308,6 +327,7 @@ void set_series_cell(uint8_t series_cell)
     
 
     write_flash_block(0x40, 0x07);
+    sleep(wait_time);
 
     
 }
@@ -319,6 +339,7 @@ void set_design_capacity(uint16_t design_capacity)
     uint8_t lsb = design_capacity & 0x00FF;
 
     uint8_t * p_return_value = read_flash_block(0x30,0x0b);
+    sleep(wait_time);
     
     for(uint8_t i = 0; i < 32; i++)
     {
@@ -329,6 +350,7 @@ void set_design_capacity(uint16_t design_capacity)
     battery_data[12] = lsb; //lsb
 
     write_flash_block(0x30, 0x0b);
+    sleep(wait_time);
 }
 
 //set design energy scale
@@ -336,6 +358,7 @@ void set_design_energy_scale(uint8_t design_energy_scale)
 {
    
     uint8_t * p_return_value = read_flash_block(0x30,0x1e);
+    sleep(wait_time);
     
     for(uint8_t i = 0; i < 32; i++)
     {
@@ -344,9 +367,8 @@ void set_design_energy_scale(uint8_t design_energy_scale)
 
     battery_data[30] = design_energy_scale;//design_energy_scale = 10
 
-    printf("remain writing\n");
-
     write_flash_block(0x30, 0x1e);
+    sleep(wait_time);
 }
 
 //set design energy
@@ -356,6 +378,7 @@ void set_design_energy(uint16_t design_energy)
     uint8_t lsb = design_energy & 0x00FF;
 
     uint8_t * p_return_value = read_flash_block(0x30,0x0d);
+    sleep(wait_time);
     
     for(uint8_t i = 0; i < 32; i++)
     {
@@ -366,18 +389,21 @@ void set_design_energy(uint16_t design_energy)
     battery_data[14] = lsb; //lsb
 
     write_flash_block(0x30, 0x0d);
+    sleep(wait_time);
 }
 
 //set VOLTSEL BIT in pack_configuration register
 void set_voltsel()
 {   
     uint16_t pack_configuration = read_pack_configuration();
+    sleep(wait_time);
     pack_configuration = pack_configuration | 0x0800;
 
     uint8_t msb = pack_configuration >> 8 ;
     uint8_t lsb = pack_configuration & 0x00FF;
 
     uint8_t * p_return_value = read_flash_block(0x40,0x00);
+    sleep(wait_time);
     
     for(uint8_t i = 0; i < 32; i++)
     {
@@ -388,6 +414,7 @@ void set_voltsel()
     battery_data[1] = lsb; //lsb
 
     write_flash_block(0x40, 0x00);
+    sleep(wait_time);
 }
 
 
@@ -398,6 +425,8 @@ void set_flash_update_ok_voltage(uint16_t flash_update_ok_voltage)
     uint8_t lsb = flash_update_ok_voltage & 0x00FF;
 
     uint8_t * p_return_value = read_flash_block(0x44,0x00);
+    sleep(wait_time);
+
     
     for(uint8_t i = 0; i < 32; i++)
     {
@@ -408,6 +437,8 @@ void set_flash_update_ok_voltage(uint16_t flash_update_ok_voltage)
     battery_data[1] = lsb; //lsb
 
     write_flash_block(0x44, 0x00);
+    sleep(wait_time);
+
 }
 
 
