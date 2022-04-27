@@ -16,7 +16,7 @@
 //i2c initilize
 int i2c_init(char *i2c_bus);
 
-// i2c close
+// i2c closeset_flash_update_ok_voltage(uint16_t flash_update_ok_voltage)
 int i2c_close(char *i2c_bus);
 
 // i2c read 

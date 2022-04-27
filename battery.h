@@ -78,11 +78,11 @@ void enable_block_data_control();
 
 uint16_t read_control(uint16_t control_subcommand);
 
-uint8_t checksum();
+uint8_t checksum(uint8_t * checksum_data);
 
 unsigned char * read_flash_block(uint8_t sub_class, uint8_t offset);
 
-uint8_t write_flash_block(uint8_t sub_class, uint8_t offset);
+uint8_t write_flash_block(uint8_t sub_class, uint8_t offset, uint8_t * data);
 
 uint16_t readVDivider();
 
