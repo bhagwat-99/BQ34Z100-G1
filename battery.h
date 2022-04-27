@@ -60,29 +60,44 @@ typedef unsigned short uint16_t;
 
 void gauge_seal();
 
-void gauge_unseal();
+static void gauge_unseal();
 
-void gauge_full_access();
+static void gauge_full_access();
+
+void gauge_unlock();
 
 void reset_guage();
 
-uint16_t board_offset();
 
-uint16_t cc_offset();
 
-uint16_t board_offset();
+//autocalibration fuctions
 
-void offset_calibration();
+static void board_offset();
 
-void enable_block_data_control();
+static void cc_offset();
 
-uint16_t read_control(uint16_t control_subcommand);
+static void offset_calibration();
 
-uint8_t checksum(uint8_t * checksum_data);
+static void enable_calibration();
 
-unsigned char * read_flash_block(uint8_t sub_class, uint8_t offset);
+static void enter_calibration();
 
-uint8_t write_flash_block(uint8_t sub_class, uint8_t offset, uint8_t * data);
+static void calibration_exit();
+
+static void it_enable();
+
+void autocalibrate();
+
+
+static void enable_block_data_control();
+
+static uint16_t read_control(uint16_t control_subcommand);
+
+static uint8_t checksum(uint8_t * checksum_data);
+
+static unsigned char * read_flash_block(uint8_t sub_class, uint8_t offset);
+
+static uint8_t write_flash_block(uint8_t sub_class, uint8_t offset, uint8_t * data);
 
 uint16_t readVDivider();
 
@@ -96,33 +111,33 @@ uint16_t read_design_energy();
 
 uint16_t read_flash_update_ok_voltage();
 
-uint8_t read_series_cell();
+uint16_t read_series_cell();
 
-uint8_t read_design_energy_scale();
+uint16_t read_design_energy_scale();
 
 void set_vdivider(uint16_t v_divider);
 
-void set_series_cell(uint8_t series_cell);
+void set_series_cell(uint16_t series_cell);
 
 void set_design_capacity(uint16_t design_capacity);
 
-void set_design_energy_scale(uint8_t design_energy_scale);
+void set_design_energy_scale(uint16_t design_energy_scale);
 
 void set_design_energy(uint16_t design_energy);
 
-void set_voltsel();
+void set_voltsel(uint16_t dummy_value);
 
 void set_flash_update_ok_voltage(uint16_t flash_update_ok_voltage);
 
+void gauge_verify_and_calibrate();
+
+static void verify_calibrate(uint16_t (*read_func)(), void (*set_func)(uint16_t),uint16_t value)
+
+
+
 uint8_t soc();
 
-uint16_t enable_calibration();
 
-uint16_t enter_calibration();
-
-uint16_t calibration_exit();
-
-uint16_t it_enable();
 
 uint16_t control_status();
 
@@ -131,15 +146,17 @@ uint16_t device_type();
 
 //battery parameter fuctions
 
-float internal_temperature();
+static uint16_t internal_temperature();
 
-float temperature();
+static uint16_t temperature();
 
-uint16_t voltage();
+static uint16_t voltage();
 
-int16_t current();
+static int16_t current();
 
-int16_t average_current();
+static int16_t average_current();
+
+void gauge_parameters()
 
 
 #endif

@@ -10,7 +10,7 @@ void gauge_seal()
 }
 
 //unseal the gauge before read/write
-void gauge_unseal()
+static void gauge_unseal()
 {
         uint8_t reg_addr    =   0x00;
         uint8_t n_bytes     =   0x02;
@@ -40,7 +40,7 @@ void gauge_unseal()
 }
 
 //full access mode of gauge. gauge must be in unsealed mode to full access mode
-void gauge_full_access()
+static void gauge_full_access()
 {
     uint8_t n_bytes = 2;
     for(uint8_t i=0;i<3;i++)
@@ -64,22 +64,25 @@ void gauge_full_access()
 
 }
 
+void gauge_unlock()
+{
+    gauge_unseal();
+    gauge_full_access();
+}
+
 //reset the guage
 void reset_guage()
 {
     read_control(RESET);
+    sleep(wait_time);
 }
 
-// force the device to measure and store board offset
-uint16_t board_offset()
-{
-    return read_control(BOARD_OFFSET);
-}
 
- // force the device to measure the internal cc offset
-uint16_t cc_offset()
+
+//control status
+uint16_t control_status()
 {
-    return read_control(CC_OFFSET);
+    return read_control(CONTROL_STATUS);
 }
 
 //get device type 0x0100 for bq34z100-g1
@@ -88,14 +91,10 @@ uint16_t device_type()
     return read_control(DEVICE_TYPE);
 }
 
-//report internal cc offset in calibration mode
-void offset_calibration()
-{
-    read_control(OFFSET_CAL);
-}
+///////////////////////////// data read write functions ///////////////////////////////////////////////////
 
 //enable accessing block data
-void enable_block_data_control()
+static void enable_block_data_control()
 {
     uint8_t n_bytes     =   1;
     uint8_t reg_addr    =   0x61;
@@ -109,7 +108,7 @@ void enable_block_data_control()
 }
 
 //read control command
-uint16_t  read_control(uint16_t control_subcommand)
+static uint16_t  read_control(uint16_t control_subcommand)
 {
     uint8_t n_bytes = 2;
     uint8_t reg_data[2];
@@ -129,7 +128,7 @@ uint16_t  read_control(uint16_t control_subcommand)
 
 
 
-uint8_t checksum(uint8_t * checksum_data)
+static uint8_t checksum(uint8_t * checksum_data)
 {
         uint8_t checksum_value = 0x00;
 
@@ -161,7 +160,7 @@ uint8_t checksum(uint8_t * checksum_data)
 
 
 //read flash block
-uint8_t * read_flash_block(uint8_t sub_class, uint8_t offset)
+static uint8_t * read_flash_block(uint8_t sub_class, uint8_t offset)
 {
     //enable block data
     enable_block_data_control();
@@ -191,7 +190,7 @@ uint8_t * read_flash_block(uint8_t sub_class, uint8_t offset)
 
 
 // write 32 byte flash data block
-uint8_t write_flash_block(uint8_t sub_class, uint8_t offset, uint8_t * data)
+static uint8_t write_flash_block(uint8_t sub_class, uint8_t offset, uint8_t * data)
 {
     //enable block data
     enable_block_data_control();
@@ -234,6 +233,147 @@ uint8_t write_flash_block(uint8_t sub_class, uint8_t offset, uint8_t * data)
     return 0;
 
 }
+
+
+
+/////////////////////////////// autocalibration fuctions ///////////////////////////////////////////////////
+
+
+//enable calibration
+static void enable_calibration()
+{
+    read_control(CAL_ENABLE);
+}
+
+
+//enter calibration
+static void enter_calibration()
+{
+    read_control(ENTER_CAL);
+}
+
+//exit calibration
+static void calibration_exit()
+{
+    read_control(EXIT_CAL);
+}
+
+
+// force the device to measure and store board offset
+static void board_offset()
+{
+    read_control(BOARD_OFFSET);
+}
+
+ // force the device to measure the internal cc offset
+static void cc_offset()
+{
+    read_control(CC_OFFSET);
+}
+
+
+//report internal cc offset in calibration mode
+static void offset_calibration()
+{
+    read_control(OFFSET_CAL);
+}
+
+//enable IT
+static void it_enable()
+{
+    read_control(IT_ENABLE);
+}
+
+void autocalibrate()
+{
+    board_offset();
+    cc_offset();
+    offset_calibration();
+    enable_calibration();
+    enter_calibration();
+    it_enable();
+    sleep(1);
+
+}
+
+
+
+
+////////////////////////// gauge parameter functions //////////////////////////////////////////
+
+
+//get internal temperature 0.1K
+static uint16_t internal_temperature()
+{
+    uint8_t * p_return_value = (i2c_read(SLAVE_ADDR,INTERNAL_TEMPERATURE,0x02));
+    return ((uint16_t)(*(p_return_value+1)) << 8 | *p_return_value) ;
+}
+
+//get temperature 0.1K
+static uint16_t temperature()
+{
+    uint8_t * p_return_value = (i2c_read(SLAVE_ADDR,TEMPERATURE,0x01));
+    return ((uint16_t)(*(p_return_value+1)) << 8 | *p_return_value );
+}
+
+//get voltage mV
+static uint16_t voltage()
+{
+    uint8_t * p_return_value = (i2c_read(SLAVE_ADDR,VOLTAGE,0x02));
+    uint16_t voltage_value = *(p_return_value+1) << 8 | *p_return_value;
+    return voltage_value;
+}
+
+//get current in mA
+static int16_t current()
+{
+    uint8_t * p_return_value = (i2c_read(SLAVE_ADDR,CURRENT,0x02));
+    int16_t current_value = *(p_return_value+1) << 8 | *p_return_value;
+    return current_value;
+
+}
+
+
+//get average current mA
+static int16_t average_current()
+{
+    uint8_t * p_return_value = (i2c_read(SLAVE_ADDR,AVERAGE_CURRENT,0x02));
+    int16_t current_value = *(p_return_value+1) << 8 | *p_return_value;
+    return current_value;
+}
+
+//get soc
+uint8_t soc()
+{
+    return *(i2c_read(SLAVE_ADDR,STATE_OF_CHARGE,0x01));
+}
+
+void gauge_parameters()
+{
+    //unseal and full access the gauge
+    gauge_unlock();
+
+    // print average current in mV
+    printf("average current %d mA\n",average_current());
+
+    // print voltage in mV
+    printf("voltage %d mV\n",voltage());
+
+
+    // //Celsius = (Kelvin – 273.15)
+    // //temperature
+    // printf("Temperature %f C\n",(float)(temperature()*10)-273.15);
+
+    //Celsius = (Kelvin – 273.15)
+    //internal temperature
+    printf("Internal Temperature %f C\n",(float)(internal_temperature()*10)-273.15);
+
+
+}
+
+
+
+/////////////////////// gauge calibration function //////////////////////////////
 
 
 //read voltsel bit in pack configuration register
@@ -285,7 +425,7 @@ uint16_t read_flash_update_ok_voltage()
 }
 
 //read no. of cell
-uint8_t read_series_cell()
+uint16_t read_series_cell()
 {
     uint8_t * p_return_value = read_flash_block(0x40, 0x07);
     return  *(p_return_value+7);
@@ -293,7 +433,7 @@ uint8_t read_series_cell()
 }
 
 //read design energy scale
-uint8_t read_design_energy_scale()
+uint16_t read_design_energy_scale()
 {
     uint8_t * p_return_value = read_flash_block(0x30, 0x1e);
     return  *(p_return_value+30);
@@ -325,7 +465,7 @@ void set_vdivider(uint16_t v_divider)
 
 
 //set series cell
-void set_series_cell(uint8_t series_cell)
+void set_series_cell(uint16_t series_cell)
 {
     uint8_t data[32];
     uint8_t * p_return_value = read_flash_block(0x40,0x07);
@@ -336,7 +476,7 @@ void set_series_cell(uint8_t series_cell)
         data[i] = *(p_return_value+i);
     }
 
-    data[7] = series_cell; //number of series cell
+    data[7] = (uint8_t)series_cell; //number of series cell
     
 
     write_flash_block(0x40, 0x07,data);
@@ -368,7 +508,7 @@ void set_design_capacity(uint16_t design_capacity)
 }
 
 //set design energy scale
-void set_design_energy_scale(uint8_t design_energy_scale)
+void set_design_energy_scale(uint16_t design_energy_scale)
 {
     uint8_t data[32];
    
@@ -380,14 +520,14 @@ void set_design_energy_scale(uint8_t design_energy_scale)
         data[i] = *(p_return_value+i);
     }
 
-    data[30] = design_energy_scale;//design_energy_scale = 10
+    data[30] = (uint8_t)design_energy_scale;//design_energy_scale = 10
 
     write_flash_block(0x30, 0x1e,data);
     sleep(wait_time);
 }
 
 //set design energy
-void set_design_energy(uint16_t design_energy)
+static void set_design_energy(uint16_t design_energy)
 {
     uint8_t data[32];
     uint8_t msb = design_energy >> 8 ;
@@ -409,7 +549,7 @@ void set_design_energy(uint16_t design_energy)
 }
 
 //set VOLTSEL BIT in pack_configuration register
-void set_voltsel()
+void set_voltsel(uint16_t dummy_value)
 {   
     uint8_t data[32];
     uint16_t pack_configuration = read_pack_configuration();
@@ -460,80 +600,94 @@ void set_flash_update_ok_voltage(uint16_t flash_update_ok_voltage)
  }
 
 
-//get soc
-uint8_t soc()
+void gauge_verify_and_calibrate()
 {
-    return *(i2c_read(SLAVE_ADDR,STATE_OF_CHARGE,0x01));
-}
+    gauge_unlock();
 
-//enable calibration
-uint16_t enable_calibration()
-{
-    return read_control(CAL_ENABLE);
-}
+    // setting flash update ok voltage
 
-//enter calibration
-uint16_t enter_calibration()
-{
-    return read_control(ENTER_CAL);
-}
-
-//exit calibration
-uint16_t calibration_exit()
-{
-    return read_control(EXIT_CAL);
-}
-
-//enable IT
-uint16_t it_enable()
-{
-    return read_control(IT_ENABLE);
-}
-
-//control status
-uint16_t control_status()
-{
-    return read_control(CONTROL_STATUS);
-}
+    verify_calibrate_func(read_flash_update_ok_voltage,set_flash_update_ok_voltage,1500);
 
 
+    // set voltsel bit
+    verify_calibrate_func(read_voltsel,set_voltsel,1);
 
-//get internal temperature 0.1K
-float internal_temperature()
-{
-    uint8_t * p_return_value = (i2c_read(SLAVE_ADDR,INTERNAL_TEMPERATURE,0x02));
-    return (float)((uint16_t)(*(p_return_value+1)) << 8 | *p_return_value) ;
-}
 
-//get temperature 0.1K
-float temperature()
-{
-    uint8_t * p_return_value = (i2c_read(SLAVE_ADDR,TEMPERATURE,0x01));
-    return (float)((uint16_t)(*(p_return_value+1)) << 8 | *p_return_value );
-}
+    // set series cell
+    verify_calibrate_func(read_series_cell,set_series_cell,4);
 
-//get voltage mV
-uint16_t voltage()
-{
-    uint8_t * p_return_value = (i2c_read(SLAVE_ADDR,VOLTAGE,0x02));
-    uint16_t voltage_value = *(p_return_value+1) << 8 | *p_return_value;
-    return voltage_value;
-}
+    // set voltage divider
+    verify_calibrate_func(readVDivider,set_vdivider,37364);
 
-//get current in mA
-int16_t current()
-{
-    uint8_t * p_return_value = (i2c_read(SLAVE_ADDR,CURRENT,0x02));
-    int16_t current_value = *(p_return_value+1) << 8 | *p_return_value;
-    return current_value;
+
+    // set design energy scale
+    verify_calibrate_func(read_design_energy_scale,set_design_energy_scale,10);
+
+
+    // set design capacity
+    verify_calibrate_func(read_design_capacity,set_design_capacity,20000);
+
+    // set design energy
+    verify_calibrate_func(read_design_energy,set_design_energy,25200);
 
 }
 
 
-//get average current mA
-int16_t average_current()
+static void verify_calibrate_func(uint16_t (*read_func)(), void (*set_func)(uint16_t),uint16_t value)
 {
-    uint8_t * p_return_value = (i2c_read(SLAVE_ADDR,AVERAGE_CURRENT,0x02));
-    int16_t current_value = *(p_return_value+1) << 8 | *p_return_value;
-    return current_value;
+
+    uint8_t attempt = 0;
+    while(read_func != value && attempt < 3)
+    {
+        set_func(value);
+        if(read_func != value)
+        {
+            attempt++;
+        }
+        
+    }
+    if(attempt>=3)
+    {
+        failed_to_calibrate(value);
+    }
 }
+
+static void failed_to_calibrate(uint16_t value)
+{
+    if(value == 1)
+    {
+        printf("Failed to set voltsel");
+    }
+    else if (value == 4)
+    {
+        printf("Failed to set series cell");
+    }
+    else if (value == 10)
+    {
+        printf("Failed to set design energy scale");
+    }
+    else if (value == 20000)
+    {
+        printf("Failed to set design capacity");
+    }
+    else if (value == 37364)
+    {
+        printf("Failed to set voltage divider");
+    }
+    else if (value == 25200)
+    {
+        printf("Failed to set design energy");
+    }
+    else if (value == 1500)
+    {
+        printf("Failed to set flash update ok voltage");
+    }
+    
+    
+    
+    
+    
+    
+}
+
+/////////////////////////////////////////////////////////////////////////////////
