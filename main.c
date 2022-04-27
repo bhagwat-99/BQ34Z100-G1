@@ -22,9 +22,6 @@ int main()
         gauge_full_access();
         printf("control_status : %x\n",control_status());
 
-        // print current value in mA
-        printf("current %d mA\n",current());
-
         // print average current in mV
         printf("average current %d mA\n",average_current());
 
