@@ -135,6 +135,8 @@ static void verify_calibrate_func(uint16_t (*read_func)(), void (*set_func)(uint
 
 static void failed_to_calibrate(uint16_t value);
 
+static void calibrated_data();
+
 uint8_t soc();
 
 

@@ -632,6 +632,8 @@ void gauge_verify_and_calibrate()
 
     printf("Successfully done calibration\n");
 
+    calibrated_data();
+
 }
 
 
@@ -684,12 +686,24 @@ static void failed_to_calibrate(uint16_t value)
     {
         printf("Failed to set flash update ok voltage");
     }
-    
-    
-    
-    
-    
-    
+}
+
+static void calibrated_data()
+{
+    printf("flash update voltage : %d\n",read_flash_update_ok_voltage());
+
+    printf("voltsel : %x\n",read_voltsel());
+
+    printf("series cell : %x\n",read_series_cell());
+
+    printf("vdivider : %d\n",readVDivider());
+
+    printf("design energy scale: %d\n",read_design_energy_scale());
+
+    printf("design capacity : %d\n",read_design_capacity());
+
+    printf("design energy: %d\n",read_design_energy());
+
 }
 
 /////////////////////////////////////////////////////////////////////////////////
