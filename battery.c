@@ -366,7 +366,7 @@ void gauge_parameters()
 
     //Celsius = (Kelvin – 273.15)
     //internal temperature
-    printf("Internal Temperature %f C\n",(float)(internal_temperature()*10)-273.15);
+    printf("Internal Temperature %f C\n",(float)(internal_temperature()*0.1)-273.15);
 
 
 }
@@ -377,14 +377,14 @@ void gauge_parameters()
 
 
 //read voltsel bit in pack configuration register
-uint16_t read_voltsel()
+static uint16_t read_voltsel()
 {   
     return (read_pack_configuration() & 0x0800) >> 11;
   
 }
 
 //read voltage divider
-uint16_t readVDivider()
+static uint16_t readVDivider()
 {
     uint8_t * p_return_value = read_flash_block(0x68, 0x0e);
     return (uint16_t)(*(p_return_value + 14)) << 8 | *(p_return_value + 15);
@@ -392,7 +392,7 @@ uint16_t readVDivider()
 }
 
 //read pack_configuration
-uint16_t read_pack_configuration()
+static uint16_t read_pack_configuration()
 {
     uint8_t * p_return_value = read_flash_block(0x40, 0x00);
     return (uint16_t)(*(p_return_value + 0)) << 8 | *(p_return_value + 1);
@@ -400,7 +400,7 @@ uint16_t read_pack_configuration()
 }
 
 //read design capacity
-uint16_t read_design_capacity()
+static uint16_t read_design_capacity()
 {
     uint8_t * p_return_value = read_flash_block(0x30, 0x0b);
 
@@ -409,7 +409,7 @@ uint16_t read_design_capacity()
 }
 
 //read design energy
-uint16_t read_design_energy()
+static uint16_t read_design_energy()
 {
     uint8_t * p_return_value = read_flash_block(0x30, 0x0d);
     return (uint16_t)(*(p_return_value + 13)) << 8 | *(p_return_value + 14);
@@ -417,7 +417,7 @@ uint16_t read_design_energy()
 }
 
 //read flash_update_ok_voltage
-uint16_t read_flash_update_ok_voltage()
+static uint16_t read_flash_update_ok_voltage()
 {
     uint8_t * p_return_value = read_flash_block(0x44, 0x00);
     return (uint16_t)(*(p_return_value + 0)) << 8 | *(p_return_value + 1);
@@ -425,7 +425,7 @@ uint16_t read_flash_update_ok_voltage()
 }
 
 //read no. of cell
-uint16_t read_series_cell()
+static uint16_t read_series_cell()
 {
     uint8_t * p_return_value = read_flash_block(0x40, 0x07);
     return  *(p_return_value+7);
@@ -433,7 +433,7 @@ uint16_t read_series_cell()
 }
 
 //read design energy scale
-uint16_t read_design_energy_scale()
+static uint16_t read_design_energy_scale()
 {
     uint8_t * p_return_value = read_flash_block(0x30, 0x1e);
     return  *(p_return_value+30);
@@ -441,7 +441,7 @@ uint16_t read_design_energy_scale()
 }
 
 //set voltage divider value
-void set_vdivider(uint16_t v_divider)
+static void set_vdivider(uint16_t v_divider)
 {
     uint8_t data[32];
     uint8_t msb = v_divider >> 8 ;
@@ -465,7 +465,7 @@ void set_vdivider(uint16_t v_divider)
 
 
 //set series cell
-void set_series_cell(uint16_t series_cell)
+static void set_series_cell(uint16_t series_cell)
 {
     uint8_t data[32];
     uint8_t * p_return_value = read_flash_block(0x40,0x07);
@@ -486,7 +486,7 @@ void set_series_cell(uint16_t series_cell)
 }
 
 //set design capacity
-void set_design_capacity(uint16_t design_capacity)
+static void set_design_capacity(uint16_t design_capacity)
 {
     uint8_t data[32];
     uint8_t msb = design_capacity >> 8 ;
@@ -508,7 +508,7 @@ void set_design_capacity(uint16_t design_capacity)
 }
 
 //set design energy scale
-void set_design_energy_scale(uint16_t design_energy_scale)
+static void set_design_energy_scale(uint16_t design_energy_scale)
 {
     uint8_t data[32];
    
@@ -549,7 +549,7 @@ static void set_design_energy(uint16_t design_energy)
 }
 
 //set VOLTSEL BIT in pack_configuration register
-void set_voltsel(uint16_t dummy_value)
+static void set_voltsel(uint16_t dummy_value)
 {   
     uint8_t data[32];
     uint16_t pack_configuration = read_pack_configuration();
@@ -630,6 +630,8 @@ void gauge_verify_and_calibrate()
     // set design energy
     verify_calibrate_func(read_design_energy,set_design_energy,25200);
 
+    printf("Successfully done calibration\n");
+
 }
 
 
@@ -637,10 +639,10 @@ static void verify_calibrate_func(uint16_t (*read_func)(), void (*set_func)(uint
 {
 
     uint8_t attempt = 0;
-    while(read_func != value && attempt < 3)
+    while(read_func() != value && attempt < 3)
     {
         set_func(value);
-        if(read_func != value)
+        if(read_func() != value)
         {
             attempt++;
         }

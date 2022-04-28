@@ -99,41 +99,41 @@ static unsigned char * read_flash_block(uint8_t sub_class, uint8_t offset);
 
 static uint8_t write_flash_block(uint8_t sub_class, uint8_t offset, uint8_t * data);
 
-uint16_t readVDivider();
+static uint16_t readVDivider();
 
-uint16_t read_pack_configuration();
+static uint16_t read_pack_configuration();
 
-uint16_t read_voltsel();
+static uint16_t read_voltsel();
 
-uint16_t read_design_capacity();
+static uint16_t read_design_capacity();
 
-uint16_t read_design_energy();
+static uint16_t read_design_energy();
 
-uint16_t read_flash_update_ok_voltage();
+static uint16_t read_flash_update_ok_voltage();
 
-uint16_t read_series_cell();
+static uint16_t read_series_cell();
 
-uint16_t read_design_energy_scale();
+static uint16_t read_design_energy_scale();
 
-void set_vdivider(uint16_t v_divider);
+static void set_vdivider(uint16_t v_divider);
 
-void set_series_cell(uint16_t series_cell);
+static void set_series_cell(uint16_t series_cell);
 
-void set_design_capacity(uint16_t design_capacity);
+static void set_design_capacity(uint16_t design_capacity);
 
-void set_design_energy_scale(uint16_t design_energy_scale);
+static void set_design_energy_scale(uint16_t design_energy_scale);
 
-void set_design_energy(uint16_t design_energy);
+static void set_design_energy(uint16_t design_energy);
 
-void set_voltsel(uint16_t dummy_value);
+static void set_voltsel(uint16_t dummy_value);
 
-void set_flash_update_ok_voltage(uint16_t flash_update_ok_voltage);
+static void set_flash_update_ok_voltage(uint16_t flash_update_ok_voltage);
 
 void gauge_verify_and_calibrate();
 
-static void verify_calibrate(uint16_t (*read_func)(), void (*set_func)(uint16_t),uint16_t value)
+static void verify_calibrate_func(uint16_t (*read_func)(), void (*set_func)(uint16_t),uint16_t value);
 
-
+static void failed_to_calibrate(uint16_t value);
 
 uint8_t soc();
 
@@ -156,7 +156,7 @@ static int16_t current();
 
 static int16_t average_current();
 
-void gauge_parameters()
+void gauge_parameters();
 
 
 #endif
