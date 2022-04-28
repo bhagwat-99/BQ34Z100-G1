@@ -17,7 +17,6 @@ int main()
         gauge_verify_and_calibrate();
 
         autocalibrate();
-
         i2c_close(i2c_bus);
         return 0;
 }
