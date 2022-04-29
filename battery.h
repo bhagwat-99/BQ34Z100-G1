@@ -161,5 +161,7 @@ int16_t average_current();
 
 void gauge_parameters();
 
+int write_to_file();
+
 
 #endif
