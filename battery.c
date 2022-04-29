@@ -303,21 +303,21 @@ void autocalibrate()
 
 
 //get internal temperature 0.1K
-static uint16_t internal_temperature()
+uint16_t internal_temperature()
 {
     uint8_t * p_return_value = (i2c_read(SLAVE_ADDR,INTERNAL_TEMPERATURE,0x02));
     return ((uint16_t)(*(p_return_value+1)) << 8 | *p_return_value) ;
 }
 
 //get temperature 0.1K
-static uint16_t temperature()
+uint16_t temperature()
 {
     uint8_t * p_return_value = (i2c_read(SLAVE_ADDR,TEMPERATURE,0x01));
     return ((uint16_t)(*(p_return_value+1)) << 8 | *p_return_value );
 }
 
 //get voltage mV
-static uint16_t voltage()
+uint16_t voltage()
 {
     uint8_t * p_return_value = (i2c_read(SLAVE_ADDR,VOLTAGE,0x02));
     uint16_t voltage_value = *(p_return_value+1) << 8 | *p_return_value;
@@ -325,7 +325,7 @@ static uint16_t voltage()
 }
 
 //get current in mA
-static int16_t current()
+int16_t current()
 {
     uint8_t * p_return_value = (i2c_read(SLAVE_ADDR,CURRENT,0x02));
     int16_t current_value = *(p_return_value+1) << 8 | *p_return_value;
@@ -335,12 +335,13 @@ static int16_t current()
 
 
 //get average current mA
-static int16_t average_current()
+int16_t average_current()
 {
     uint8_t * p_return_value = (i2c_read(SLAVE_ADDR,AVERAGE_CURRENT,0x02));
     int16_t current_value = *(p_return_value+1) << 8 | *p_return_value;
     return current_value;
 }
+
 
 //get soc
 uint8_t soc()
@@ -352,6 +353,7 @@ void gauge_parameters()
 {
     //unseal and full access the gauge
     gauge_unlock();
+
 
     // print average current in mV
     printf("average current %d mA\n",average_current());

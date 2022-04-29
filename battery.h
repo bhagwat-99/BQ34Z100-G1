@@ -149,15 +149,15 @@ uint16_t device_type();
 
 //battery parameter fuctions
 
-static uint16_t internal_temperature();
+uint16_t internal_temperature();
 
-static uint16_t temperature();
+uint16_t temperature();
 
-static uint16_t voltage();
+uint16_t voltage();
 
-static int16_t current();
+int16_t current();
 
-static int16_t average_current();
+int16_t average_current();
 
 void gauge_parameters();
 
