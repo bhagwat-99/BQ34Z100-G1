@@ -16,7 +16,7 @@ int main()
         //verify and set all the parameter. Alert when fail to set
         gauge_verify_and_calibrate();
 
-        autocalibrate();
+        //autocalibrate();
         i2c_close(i2c_bus);
         return 0;
 }

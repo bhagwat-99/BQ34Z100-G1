@@ -201,7 +201,7 @@ static uint8_t write_flash_block(uint8_t sub_class, uint8_t offset, uint8_t * da
     uint8_t reg_data[1];
     reg_data[0] =  sub_class ;
     i2c_write(SLAVE_ADDR, reg_addr, reg_data, n_bytes);
-    usleep(wait_time*2);
+    usleep(wait_time);
 
     //write offset to 0x3f register
     reg_addr = 0x3f;
@@ -215,7 +215,7 @@ static uint8_t write_flash_block(uint8_t sub_class, uint8_t offset, uint8_t * da
     reg_addr = 0x40;
     n_bytes = 32;
     i2c_write(SLAVE_ADDR, reg_addr, data, n_bytes);
-    usleep(2*wait_time);
+    usleep(wait_time);
 
     //write checksum to address 0x60
     reg_addr = 0x60;
@@ -403,14 +403,14 @@ int write_to_file()
                         printf("error writing voltage to file \n");     
                 }
 
-                uint16_t average_current_value = average_current();
+                int16_t average_current_value = average_current();
                 //writing current to file
                 if(fprintf(fptr,"Average Current : %d mA\n",average_current_value )<0)
                 {   
                         printf("error writing current to file \n");     
                 }
 
-                uint16_t current_value = current();
+                int16_t current_value = current();
                 //writing current to file
                 if(fprintf(fptr,"Current : %d mA\n",current_value )<0)
                 {   
@@ -509,7 +509,7 @@ static void set_vdivider(uint16_t v_divider)
     data[15] = lsb; //lsb
 
     write_flash_block(0x68, 0x0e,data);
-    usleep(wait_time);
+    //usleep(wait_time);
 
 }
 
@@ -530,7 +530,7 @@ static void set_series_cell(uint16_t series_cell)
     
 
     write_flash_block(0x40, 0x07,data);
-    usleep(wait_time);
+    //usleep(wait_time);
 
     
 }
@@ -554,7 +554,7 @@ static void set_design_capacity(uint16_t design_capacity)
     data[12] = lsb; //lsb
 
     write_flash_block(0x30, 0x0b,data);
-    usleep(wait_time);
+    //usleep(wait_time);
 }
 
 //set design energy scale
@@ -573,7 +573,7 @@ static void set_design_energy_scale(uint16_t design_energy_scale)
     data[30] = (uint8_t)design_energy_scale;//design_energy_scale = 10
 
     write_flash_block(0x30, 0x1e,data);
-    usleep(wait_time);
+    //usleep(wait_time);
 }
 
 //set design energy
@@ -595,7 +595,7 @@ static void set_design_energy(uint16_t design_energy)
     data[14] = lsb; //lsb
 
     write_flash_block(0x30, 0x0d,data);
-    usleep(wait_time);
+    //usleep(wait_time);
 }
 
 //set VOLTSEL BIT in pack_configuration register
@@ -621,7 +621,7 @@ static void set_voltsel(uint16_t dummy_value)
     data[1] = lsb; //lsb
 
     write_flash_block(0x40, 0x00,data);
-    usleep(wait_time);
+    //usleep(wait_time);
 }
 
 
@@ -645,7 +645,7 @@ void set_flash_update_ok_voltage(uint16_t flash_update_ok_voltage)
     data[1] = lsb; //lsb
 
     write_flash_block(0x44, 0x00,data);
-    usleep(wait_time);
+    //usleep(wait_time);
 
  }
 

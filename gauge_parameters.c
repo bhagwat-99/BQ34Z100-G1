@@ -9,6 +9,7 @@ char *i2c_bus = "/dev/apalis-i2c1";
 //char *i2c_bus = "/dev/i2c-0";
 
 
+
 int main()
 {
         // start the i2c bus
