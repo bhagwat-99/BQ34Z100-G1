@@ -418,7 +418,7 @@ int write_to_file()
                 }
 
                 fclose(fptr);
-                sleep(2);
+                sleep(10);
         }
         return 0;
 }
