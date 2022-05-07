@@ -15,6 +15,10 @@
 
 #include "I2C.h"
 
+
+#define RAM_FILE_PATH   "/tmp/battery_parameters"
+#define FILE_MODE       "w"
+
 //device address
 #define SLAVE_ADDR              0x55
 
@@ -90,7 +94,7 @@ static void it_enable();
 void autocalibrate();
 
 
-static void enable_block_data_control();
+static int enable_block_data_control();
 
 static uint16_t read_control(uint16_t control_subcommand);
 

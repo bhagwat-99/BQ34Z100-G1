@@ -19,10 +19,12 @@ int main()
         }
 
         //gauge_parameters();
+        
+        // write battery parameters to file
         write_to_file();
 
         // close the i2c bus
-        i2c_close(i2c_bus);
+        ifi2c_close(i2c_bus);
         return 0;
 }
 

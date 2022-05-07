@@ -57,9 +57,10 @@ int i2c_write(unsigned char slave_addr, unsigned char reg, unsigned char *data, 
     msgset[0].msgs = msgs;
     msgset[0].nmsgs = 1;
 
-    if (ioctl(fd_i2c, I2C_RDWR, &msgset) < 0) {
+    if (ioctl(fd_i2c, I2C_RDWR, &msgset) < 0)
+    {
         perror("ioctl(I2C_RDWR) in i2c_write");
-        return -1;
+        return NULL;
     }
 
     return 0;
@@ -89,8 +90,10 @@ unsigned char * i2c_read(unsigned char slave_addr, unsigned char reg, unsigned c
     msgset[0].msgs = msgs;
     msgset[0].nmsgs = 2;
 
-    if (ioctl(fd_i2c, I2C_RDWR, &msgset) < 0) {
+    if (ioctl(fd_i2c, I2C_RDWR, &msgset) < 0)
+    {
         perror("ioctl(I2C_RDWR) in i2c_read");
+        return NULL;
     }
     
     return i2c_data;
