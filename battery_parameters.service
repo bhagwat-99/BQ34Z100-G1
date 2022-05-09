@@ -1,10 +1,3 @@
-/*      @author         Bhagwat Shinde
-        name            battery_parameters.service
-        Description     write battery parameters to the ram file /tmp/battery_parameters
-        date            09 May 2022
-        Dependancy      gauge_configure.service
-        How to use      Enable the service
-*/
 
 [Unit]
 Description = battery parameter monitoring service
