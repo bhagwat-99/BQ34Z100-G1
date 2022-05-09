@@ -14,7 +14,7 @@ StartLimitBurst=2
 
 
 [Service]
-ExecStart = /home/root/bhagwatws/battery_parameters
+ExecStart = /usr/sbin/sensor_code/battery_parameters
 Restart=on-failure
 
 [Install]

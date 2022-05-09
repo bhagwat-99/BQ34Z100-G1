@@ -13,7 +13,7 @@ Before = battery_parameters.service
 
 [Service]
 Type=oneshot
-ExecStart=/home/root/bhagwatws/gauge_configure
+ExecStart=/usr/sbin/sensor_code/gauge_configure
 
 [Install]
 WantedBy=multi-user.target
