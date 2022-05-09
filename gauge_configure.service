@@ -1,0 +1,19 @@
+/*      @author         Bhagwat Shinde
+        name            gauge_configure.service
+        Description     configure the fuel gauge
+        date            09 May 2022
+        Used by         battery_parameters.service
+        enable the service
+*/
+
+[Unit]
+Description= fuel gauge configure service
+Before = battery_parameters.service
+
+
+[Service]
+Type=oneshot
+ExecStart=/home/root/bhagwatws/gauge_configure
+
+[Install]
+WantedBy=multi-user.target

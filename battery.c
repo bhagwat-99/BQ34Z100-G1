@@ -4,13 +4,17 @@
 #define wait_time 1000000/4 // unit - usec wait_time - (1sec)
 
 // seal the gauge - don't execute the function if device already in sealed state
-void gauge_seal()
+int gauge_seal()
 {
-    read_control(SEALED);
+    if(read_control(SEALED) == -1)
+    {
+        return -1;
+    }
+    return 0;
 }
 
 //unseal the gauge before read/write
-static void gauge_unseal()
+static int gauge_unseal()
 {
         uint8_t reg_addr    =   0x00;
         uint8_t n_bytes     =   0x02;
@@ -25,6 +29,7 @@ static void gauge_unseal()
         if (ret_val < 0 )
         {
             perror("gauge unseal failed");
+            return -1;
         }
 
         reg_addr =0x00;
@@ -36,11 +41,13 @@ static void gauge_unseal()
         if (ret_val < 0 )
         {
             perror("gauge unseal failed");
+            return -1;
         }
+        return 0;
 }
 
 //full access mode of gauge. gauge must be in unsealed mode to full access mode
-static void gauge_full_access()
+static int gauge_full_access()
 {
     uint8_t n_bytes = 2;
     for(uint8_t i=0;i<3;i++)
@@ -57,46 +64,81 @@ static void gauge_full_access()
         if (ret_val < 0 )
         {
             perror("gauge unseal failed");
+            return -1;
         }
 
 
         reg_addr =0x00;
         reg_data[0]=0xFF;//lsb
         reg_data[1]=0xFF;//msb
-        int ret_val = i2c_write(SLAVE_ADDR,reg_addr, reg_data,n_bytes);
+        ret_val = i2c_write(SLAVE_ADDR,reg_addr, reg_data,n_bytes);
         usleep(wait_time);
         if (ret_val < 0 )
         {
             perror("gauge unseal failed");
+            return -1;
         }
     }
+    return 0;
 
 }
 
 //unlock the gauge
-void gauge_unlock()
+int gauge_unlock()
 {
-    gauge_unseal();
-    gauge_full_access();
+    int ret_val;
+    ret_val = gauge_unseal();
+    if(ret_val == -1)
+    {
+        perror("gauge unlock failed");
+        return -1;
+    }
+    ret_val = gauge_full_access();
+    if(ret_val == -1)
+    {
+        perror("gauge unlock failed");
+        return -1;
+    }
+    return 0;
 }
 
 //reset the guage
-void reset_guage()
+int reset_guage()
 {
-    read_control(RESET);
-    usleep(wait_time);
+    int ret_val = read_control(RESET);
+    if(ret_val == -1)
+    {
+        printf("failed to reset gauge\n");
+        return -1;
+    }
+    return 0;
+
 }
 
 //control status
-uint16_t control_status()
+int control_status()
 {
-    return read_control(CONTROL_STATUS);
+    int ret_val = read_control(CONTROL_STATUS);
+    if(ret_val == -1)
+    {
+        printf("failed control status\n");
+        return -1;
+    }
+
+    return (uint16_t)ret_val;
 }
 
 //get device type 0x0100 for bq34z100-g1
-uint16_t device_type()
+int device_type()
 {
-    return read_control(DEVICE_TYPE);
+    int ret_val = read_control(DEVICE_TYPE);
+    if(ret_val == -1)
+    {
+        printf("failed device type\n");
+        return -1;
+    }
+
+    return (uint16_t)ret_val;
 }
 
 ///////////////////////////// data read write functions ///////////////////////////////////////////////////
@@ -115,13 +157,14 @@ static int enable_block_data_control()
     if (ret_val < 0 )
     {
         perror("Error enable_block_data_control\n");
-        return NULL;
+        return -1;
     }
+    return 0;
     
 }
 
 //read control command
-static uint16_t  read_control(uint16_t control_subcommand)
+static int  read_control(uint16_t control_subcommand)
 {
     uint8_t n_bytes = 2;
     uint8_t reg_data[2];
@@ -134,7 +177,7 @@ static uint16_t  read_control(uint16_t control_subcommand)
     if (ret_val < 0 )
     {
         perror("read_control failed \n");
-        return NULL;
+        return -1;
     }
 
 
@@ -143,6 +186,7 @@ static uint16_t  read_control(uint16_t control_subcommand)
     if(p_ret_val)
     {
         printf("read control failed \n");
+        return -1;
     }
 
     return ((uint16_t)(*(p_ret_val + 1)) << 8 | * p_ret_val) ;
@@ -172,7 +216,7 @@ static uint8_t * read_flash_block(uint8_t sub_class, uint8_t offset)
 {
     //enable block data
     int ret_val = enable_block_data_control();
-    if(ret_val == NULL)
+    if(ret_val == -1)
     {
             return NULL;
     }
@@ -182,9 +226,9 @@ static uint8_t * read_flash_block(uint8_t sub_class, uint8_t offset)
     uint8_t n_bytes = 1;
     uint8_t reg_data[1];
     reg_data[0] =  sub_class ;
-    int ret_val = i2c_write(SLAVE_ADDR, reg_addr, reg_data, n_bytes);
+    ret_val = i2c_write(SLAVE_ADDR, reg_addr, reg_data, n_bytes);
     usleep(wait_time*2);
-    if(ret_val == NULL)
+    if(ret_val == -1)
     {
         perror("Error read_flash_block : 3e");
         return NULL;
@@ -196,7 +240,7 @@ static uint8_t * read_flash_block(uint8_t sub_class, uint8_t offset)
     reg_data[0] =  offset/32 ; //msb
     ret_val = i2c_write(SLAVE_ADDR, reg_addr, reg_data, n_bytes);
     usleep(wait_time*2);
-    if(ret_val == NULL)
+    if(ret_val == -1)
     {
         perror("Error read_flash_block : 3f");
         return NULL;
@@ -206,26 +250,26 @@ static uint8_t * read_flash_block(uint8_t sub_class, uint8_t offset)
     //read data from 0x40 address
     reg_addr = 0x40;
     n_bytes = 32;
-    uint8_t * p_ret_value = i2c_read(SLAVE_ADDR, reg_addr, n_bytes);
+    uint8_t * p_ret_val = i2c_read(SLAVE_ADDR, reg_addr, n_bytes);
     usleep(wait_time*2);
-    if(ret_val == NULL)
+    if(p_ret_val == NULL)
     {
         perror("Error read_flash_block : 0x40");
         return NULL;
     }
 
-    return p_ret_value;
+    return p_ret_val;
 }
 
 
 // write 32 byte flash data block
-static uint8_t write_flash_block(uint8_t sub_class, uint8_t offset, uint8_t * data)
+static int write_flash_block(uint8_t sub_class, uint8_t offset, uint8_t * data)
 {
     //enable block data
     int ret_val = enable_block_data_control();
-    if(ret_val == NULL)
+    if(ret_val == -1)
     {
-        return NULL;
+        return -1;
     }
    
     //write subclass id to 0x3e
@@ -233,12 +277,12 @@ static uint8_t write_flash_block(uint8_t sub_class, uint8_t offset, uint8_t * da
     uint8_t n_bytes = 1;
     uint8_t reg_data[1];
     reg_data[0] =  sub_class ;
-    int ret_val = i2c_write(SLAVE_ADDR, reg_addr, reg_data, n_bytes);
+    ret_val = i2c_write(SLAVE_ADDR, reg_addr, reg_data, n_bytes);
     usleep(wait_time*2);
-    if(ret_val == NULL)
+    if(ret_val == -1)
     {
         perror("Error write_flash_block : 3e");
-        return NULL;
+        return -1;
     }
 
     //write offset to 0x3f register
@@ -247,10 +291,10 @@ static uint8_t write_flash_block(uint8_t sub_class, uint8_t offset, uint8_t * da
     reg_data[0] =  offset/32 ; //msb
     ret_val = i2c_write(SLAVE_ADDR, reg_addr, reg_data, n_bytes);
     usleep(wait_time*2);
-    if(ret_val == NULL)
+    if(ret_val == -1)
     {
         perror("Error write_flash_block : 3f");
-        return NULL;
+        return -1;
     }
 
     //write data to 0x40 address
@@ -258,10 +302,10 @@ static uint8_t write_flash_block(uint8_t sub_class, uint8_t offset, uint8_t * da
     n_bytes = 32;
     ret_val = i2c_write(SLAVE_ADDR, reg_addr, data, n_bytes);
     usleep(wait_time);
-    if(ret_val == NULL)
+    if(ret_val == -1)
     {
         perror("Error read_flash_block : 3f");
-        return NULL;
+        return -1;
     }
 
 
@@ -272,10 +316,10 @@ static uint8_t write_flash_block(uint8_t sub_class, uint8_t offset, uint8_t * da
 
     ret_val = i2c_write(SLAVE_ADDR,reg_addr, reg_data,n_bytes);
     usleep(2*wait_time);
-    if(ret_val == NULL )
+    if(ret_val == -1 )
     {
         perror("failed to write checksum");
-        return NULL;
+        return -1;
     }
 
     return 0;
@@ -288,59 +332,153 @@ static uint8_t write_flash_block(uint8_t sub_class, uint8_t offset, uint8_t * da
 
 
 //enable calibration
-static void enable_calibration()
+static int enable_calibration()
 {
-    read_control(CAL_ENABLE);
+    int ret_val = read_control(CAL_ENABLE);
+    if(ret_val == -1)
+    {
+        printf("failed CAL ENABLE\n");
+        return -1;
+    }
+
+    return (uint16_t)ret_val;
 }
 
 
 //enter calibration
-static void enter_calibration()
+static int enter_calibration()
 {
-    read_control(ENTER_CAL);
+    int ret_val = read_control(ENTER_CAL);
+    if(ret_val == -1)
+    {
+        printf("failed enter_calibration\n");
+        return -1;
+    }
+
+    return (uint16_t)ret_val;
 }
 
 //exit calibration
-static void calibration_exit()
+static int calibration_exit()
 {
-    read_control(EXIT_CAL);
+    int ret_val = read_control(EXIT_CAL);
+    if(ret_val == -1)
+    {
+        printf("failed exit calibration\n");
+        return -1;
+    }
+
+    return (uint16_t)ret_val;
+    
 }
 
 
 // force the device to measure and store board offset
-static void board_offset()
+static int board_offset()
 {
-    read_control(BOARD_OFFSET);
+    int ret_val = read_control(BOARD_OFFSET);
+    if(ret_val == -1)
+    {
+        printf("failed board_offset\n");
+        return -1;
+    }
+
+    return (uint16_t)ret_val;
+    
 }
 
  // force the device to measure the internal cc offset
-static void cc_offset()
+static int cc_offset()
 {
-    read_control(CC_OFFSET);
+    int ret_val = read_control(CC_OFFSET);
+    if(ret_val == -1)
+    {
+        printf("failed cc_offset\n");
+        return -1;
+    }
+
+    return (uint16_t)ret_val;
+
+    
 }
 
 
 //report internal cc offset in calibration mode
-static void offset_calibration()
+static int offset_calibration()
 {
-    read_control(OFFSET_CAL);
+    int ret_val =  read_control(OFFSET_CAL);
+    if(ret_val == -1)
+    {
+        printf("failed offset_calibration\n");
+        return -1;
+    }
+
+    return (uint16_t)ret_val;
+
+   
 }
 
 //enable IT
-static void it_enable()
+static int it_enable()
 {
-    read_control(IT_ENABLE);
+    int ret_val =  read_control(IT_ENABLE);
+    if(ret_val == -1)
+    {
+        printf("failed it_enable\n");
+        return -1;
+    }
+
+    return (uint16_t)ret_val;
+
+    
 }
 
-void autocalibrate()
+int autocalibrate()
 {
-    board_offset();
-    cc_offset();
-    offset_calibration();
-    enable_calibration();
-    enter_calibration();
-    it_enable();
+    int ret_val = board_offset();
+    if(ret_val == -1)
+    {
+        printf("failed autocalibrate : board offset\n");
+        return -1;
+    }
+
+    ret_val = cc_offset();
+    if(ret_val == -1)
+    {
+        printf("failed autocalibrate : cc offset\n");
+        return -1;
+    }
+
+    ret_val = offset_calibration();
+    if(ret_val == -1)
+    {
+        printf("failed autocalibrate : offset calibration\n");
+        return -1;
+    }
+
+    ret_val = enable_calibration();
+    if(ret_val == -1)
+    {
+        printf("failed autocalibrate : enable calibration\n");
+        return -1;
+    }
+
+    ret_val = enter_calibration();
+    if(ret_val == -1)
+    {
+        printf("failed autocalibrate : enter calibration\n");
+        return -1;
+    }
+
+    ret_val = it_enable();
+    if(ret_val == -1)
+    {
+        printf("failed autocalibrate : it enable\n");
+        return -1;
+    }
+
     usleep(wait_time);
+    return 0;
 
 }
 
@@ -351,38 +489,38 @@ void autocalibrate()
 
 
 //get internal temperature 0.1K
-uint16_t internal_temperature()
+int internal_temperature()
 {
     uint8_t * p_ret_val = (i2c_read(SLAVE_ADDR,INTERNAL_TEMPERATURE,0x02));
     if(p_ret_val == NULL)
     {
         printf("Error internal_temperature\n");
-        return NULL;
+        return -1;
     }
 
     return ((uint16_t)(*(p_ret_val+1)) << 8 | *p_ret_val) ;
 }
 
 //get temperature 0.1K
-uint16_t temperature()
+int temperature()
 {
     uint8_t * p_ret_val = (i2c_read(SLAVE_ADDR,TEMPERATURE,0x01));
     if(p_ret_val == NULL)
     {
         printf("Error temperature\n");
-        return NULL;
+        return -1;
     }
     return ((uint16_t)(*(p_ret_val+1)) << 8 | *p_ret_val );
 }
 
 //get voltage mV
-uint16_t voltage()
+int voltage()
 {
     uint8_t * p_ret_val = (i2c_read(SLAVE_ADDR,VOLTAGE,0x02));
     if(p_ret_val == NULL)
     {
         printf("Error voltage\n");
-        return NULL;
+        return -1;
     }
 
     uint16_t voltage_value = *(p_ret_val+1) << 8 | *p_ret_val;
@@ -390,13 +528,13 @@ uint16_t voltage()
 }
 
 //get current in mA
-int16_t current()
+int current()
 {
     uint8_t * p_ret_val = (i2c_read(SLAVE_ADDR,CURRENT,0x02));
     if(p_ret_val == NULL)
     {
         printf("Error current\n");
-        return NULL;
+        return -1;
     }
 
     int16_t current_value = *(p_ret_val+1) << 8 | *p_ret_val;
@@ -406,13 +544,13 @@ int16_t current()
 
 
 //get average current mA
-int16_t average_current()
+int average_current()
 {
     uint8_t * p_ret_val = (i2c_read(SLAVE_ADDR,AVERAGE_CURRENT,0x02));
     if(p_ret_val == NULL)
     {
         printf("Error average_current\n");
-        return NULL;
+        return -1;
     }
 
     int16_t current_value = *(p_ret_val+1) << 8 | *p_ret_val;
@@ -426,36 +564,49 @@ uint8_t soc()
     return *(i2c_read(SLAVE_ADDR,STATE_OF_CHARGE,0x01));
 }
 
-void gauge_parameters()
-{
-    //unseal and full access the gauge
-    gauge_unlock();
+// int gauge_parameters()
+// {
+//     //unseal and full access the gauge
+//     gauge_unlock();
 
 
-    // print average current in mV
-    int16_t ret_val = average_current();
-    if(ret_val == NULL)
-    {
-        printf("Error average_current\n");
-    }
-    printf("average current %d mA\n",ret_val);
+//     // print average current in mV
+//     int16_t ret_val = average_current();
+//     if(ret_val == -1)
+//     {
+//         printf("Error average_current\n");
+//         return -1;
+//     }
+//     printf("average current %d mA\n",ret_val);
 
-    // print voltage in mV
-    int16_t ret_val = voltage();
-    printf("voltage %d mV\n",ret_val);
-
-
-    // //Celsius = (Kelvin – 273.15)
-    // //temperature
-    // printf("Temperature %f C\n",(float)(temperature()*10)-273.15);
-
-    //Celsius = (Kelvin – 273.15)
-    //internal temperature
-    int16_t ret_val = internal_temperature();
-    printf("Internal Temperature %f C\n",(float)(ret_val*0.1)-273.15);
+//     // print voltage in mV
+//     ret_val = voltage();
+//     if(ret_val == -1)
+//     {
+//         printf("Error gauge parameters voltage\n");
+//         return -1;
+//     }
+ 
+//     printf("voltage %d mV\n",ret_val);
 
 
-}
+//     // //Celsius = (Kelvin – 273.15)
+//     // //temperature
+//     // printf("Temperature %f C\n",(float)(temperature()*10)-273.15);
+
+//     //Celsius = (Kelvin – 273.15)
+//     //internal temperature
+//     ret_val = internal_temperature();
+//     if(ret_val == -1)
+//     {
+//         printf("Error gauge parameters internal temperature\n");
+//         return -1;
+//     }
+
+//     printf("Internal Temperature %f C\n",(float)(ret_val*0.1)-273.15);
+
+
+// }
 
 
 int write_to_file()
@@ -470,49 +621,64 @@ int write_to_file()
                 if(fptr == NULL)
                 {
                         printf("Error opening the file %s\n",RAM_FILE_PATH);
-                        return NULL;
+                        return -1;
                 }
-                int16_t ret_val = internal_temperature();
-                if(ret_val == NULL)
+
+
+                int ret_val = internal_temperature();
+                if(ret_val == -1)
                 {
                     printf("Error internal temperature\n");
-                    return NULL;
+                    return -1;
                 }
-                float internal_temp = (float)ret_val*0.1-273.15;
+                uint16_t temp = (uint16_t)ret_val;
+                float internal_temp = (float)temp*0.1-273.15;
                 //writing internal temp to file
                 if(fprintf(fptr,"Temperature : %0.2f C\n",internal_temp )<0)
                 {   
                         printf("error writing temperature to file \n");
-                        return NULL;     
+                        return -1;     
                 }
 
-                uint16_t volt = voltage();
+
+                ret_val = voltage();
+                if(ret_val == -1)
+                {
+                    printf("Error write to file : voltage\n");
+                    return -1;
+                }
+                uint16_t volt = (uint16_t)ret_val;
                 //writing voltage to file
                 if(fprintf(fptr,"Voltage : %d mV\n",volt )<0)
                 {   
                         printf("error writing voltage to file \n");
-                        return NULL;     
+                        return -1;     
                 }
 
-                int16_t average_current_value = average_current();
-                if(average_current_value == NULL)
+                ret_val = average_current();
+                if(ret_val == -1)
                 {
                     printf("Error average_current_value\n");
-                    return NULL;
+                    return -1;
                 }
+                int16_t average_current_value = (int16_t)ret_val;
+                
                 //writing average current to file
                 if(fprintf(fptr,"Average Current : %d mA\n",average_current_value )<0)
                 {   
-                        printf("error writing average current to file \n");
-                        return NULL;     
+                    printf("error writing average current to file \n");
+                    return -1;     
                 }
 
-                int16_t current_value = current();
-                if(current_value == NULL)
+
+                ret_val = current();
+                if(ret_val == -1)
                 {
                     printf("Error current_value\n");
-                    return NULL;
+                    return -1;
                 }
+                int16_t current_value = (int16_t)ret_val;
+                
                 //writing current to file
                 if(fprintf(fptr,"Current : %d mA\n",current_value )<0)
                 {   
@@ -520,7 +686,11 @@ int write_to_file()
                     return -1;     
                 }
 
-                fclose(fptr);
+                if(fclose(fptr) == EOF)
+                {
+                    printf("Failed closing the file /tmp/battery_parameters");
+                    return -1;
+                }
                 sleep(10);
         }
         return 0;
@@ -530,52 +700,52 @@ int write_to_file()
 
 
 //read voltsel bit in pack configuration register
-static uint16_t read_voltsel()
+static int read_voltsel()
 {   
     uint16_t ret_val = read_pack_configuration();
-    if(ret_val == NULL)
+    if(ret_val == -1)
     {
         printf("Error read_voltsel\n");
-        return NULL;
+        return -1;
     }
     return (ret_val & 0x0800) >> 11;
   
 }
 
 //read voltage divider
-static uint16_t readVDivider()
+static int readVDivider()
 {
     uint8_t * p_ret_val = read_flash_block(0x68, 0x0e);
     if(p_ret_val == NULL)
     {
         printf("Error readVDivider\n");
-        return NULL;
+        return -1;
     }
     return (uint16_t)(*(p_ret_val + 14)) << 8 | *(p_ret_val + 15);
 
 }
 
 //read pack_configuration
-static uint16_t read_pack_configuration()
+static int read_pack_configuration()
 {
     uint8_t * p_ret_val = read_flash_block(0x40, 0x00);
     if(p_ret_val == NULL)
     {
         printf("Error read_pack_configuration\n");
-        return NULL;
+        return -1;
     }
     return (uint16_t)(*(p_ret_val + 0)) << 8 | *(p_ret_val + 1);
 
 }
 
 //read design capacity
-static uint16_t read_design_capacity()
+static int read_design_capacity()
 {
     uint8_t * p_ret_val = read_flash_block(0x30, 0x0b);
     if(p_ret_val == NULL)
     {
         printf("Error read_design_capacity\n");
-        return NULL;
+        return -1;
     }
 
     return (uint16_t)(*(p_ret_val + 11)) << 8 | *(p_ret_val + 12);
@@ -583,13 +753,13 @@ static uint16_t read_design_capacity()
 }
 
 //read design energy
-static uint16_t read_design_energy()
+static int read_design_energy()
 {
     uint8_t * p_ret_val = read_flash_block(0x30, 0x0d);
     if(p_ret_val == NULL)
     {
         printf("Error read_design_energy\n");
-        return NULL;
+        return -1;
     }
 
     return (uint16_t)(*(p_ret_val + 13)) << 8 | *(p_ret_val + 14);
@@ -597,13 +767,13 @@ static uint16_t read_design_energy()
 }
 
 //read flash_update_ok_voltage
-static uint16_t read_flash_update_ok_voltage()
+static int read_flash_update_ok_voltage()
 {
     uint8_t * p_ret_val = read_flash_block(0x44, 0x00);
     if(p_ret_val == NULL)
     {
         printf("Error read_flash_update_ok_voltage\n");
-        return NULL;
+        return -1;
     }
 
     return (uint16_t)(*(p_ret_val + 0)) << 8 | *(p_ret_val + 1);
@@ -611,13 +781,13 @@ static uint16_t read_flash_update_ok_voltage()
 }
 
 //read no. of cell
-static uint16_t read_series_cell()
+static int read_series_cell()
 {
     uint8_t * p_ret_val = read_flash_block(0x40, 0x07);
     if(p_ret_val == NULL)
     {
         printf("Error read_series_cell\n");
-        return NULL;
+        return -1;
     }
 
     return  *(p_ret_val+7);
@@ -625,13 +795,13 @@ static uint16_t read_series_cell()
 }
 
 //read design energy scale
-static uint16_t read_design_energy_scale()
+static int read_design_energy_scale()
 {
     uint8_t * p_ret_val = read_flash_block(0x30, 0x1e);
     if(p_ret_val == NULL)
     {
         printf("Error read_design_energy_scale\n");
-        return NULL;
+        return -1;
     }
 
     return  *(p_ret_val+30);
@@ -639,7 +809,7 @@ static uint16_t read_design_energy_scale()
 }
 
 //set voltage divider value
-static void set_vdivider(uint16_t v_divider)
+static int set_vdivider(uint16_t v_divider)
 {
     uint8_t data[32];
     uint8_t msb = v_divider >> 8 ;
@@ -650,7 +820,7 @@ static void set_vdivider(uint16_t v_divider)
     if(p_ret_val == NULL)
     {
         printf("Error setv_divider : read flash block\n");
-        return NULL;
+        return -1;
     }
     
     for(uint8_t i = 0; i < 32; i++)
@@ -662,16 +832,18 @@ static void set_vdivider(uint16_t v_divider)
     data[15] = lsb; //lsb
 
     int ret_val = write_flash_block(0x68, 0x0e,data);
-    if(ret_val == NULL)
+    if(ret_val == -1)
     {
         printf("Error setting voltage divider");
-        return NULL;
+        return -1;
     }
+
+    return 0;
 }
 
 
 //set series cell
-static void set_series_cell(uint16_t series_cell)
+static int set_series_cell(uint16_t series_cell)
 {
     uint8_t data[32];
     uint8_t * p_ret_val = read_flash_block(0x40,0x07);
@@ -679,7 +851,7 @@ static void set_series_cell(uint16_t series_cell)
     if(p_ret_val == NULL)
     {
         printf("Error set_series_cell : read flash block\n");
-        return NULL;
+        return -1;
     }
 
     for(uint8_t i = 0; i < 32; i++)
@@ -691,17 +863,17 @@ static void set_series_cell(uint16_t series_cell)
     
 
     int ret_val = write_flash_block(0x40, 0x07,data);
-    if(ret_val == NULL)
+    if(ret_val == -1)
     {
         printf("Error setting series cell\n");
-        return NULL;
+        return -1;
     }
-
+    return 0;
     
 }
 
 //set design capacity
-static void set_design_capacity(uint16_t design_capacity)
+static int set_design_capacity(uint16_t design_capacity)
 {
     uint8_t data[32];
     uint8_t msb = design_capacity >> 8 ;
@@ -712,7 +884,7 @@ static void set_design_capacity(uint16_t design_capacity)
     if(p_ret_val  == NULL)
     {
         printf("Error set_design_capacity : read_flash_block");
-        return NULL;
+        return -1;
     }
     
     for(uint8_t i = 0; i < 32; i++)
@@ -724,15 +896,16 @@ static void set_design_capacity(uint16_t design_capacity)
     data[12] = lsb; //lsb
 
     int ret_val = write_flash_block(0x30, 0x0b,data);
-    if(ret_val == NULL)
+    if(ret_val == -1)
     {
         printf("Error set_design_capacity\n");
-        return NULL;
+        return -1;
     }
+    return 0;
 }
 
 //set design energy scale
-static void set_design_energy_scale(uint16_t design_energy_scale)
+static int set_design_energy_scale(uint16_t design_energy_scale)
 {
     uint8_t data[32];
    
@@ -741,7 +914,7 @@ static void set_design_energy_scale(uint16_t design_energy_scale)
     if(p_ret_val == NULL)
     {
         printf("Error set_design_energy_scale : read_flash_block\n");
-        return NULL;
+        return -1;
     }
     
     for(uint8_t i = 0; i < 32; i++)
@@ -752,15 +925,17 @@ static void set_design_energy_scale(uint16_t design_energy_scale)
     data[30] = (uint8_t)design_energy_scale;//design_energy_scale = 10
 
     int ret_val = write_flash_block(0x30, 0x1e,data);
-    if(ret_val == NULL)
+    if(ret_val == -1)
     {
         printf("Error set_design_energy_scale\n");
-        return NULL;
+        return -1;
     }
+
+    return 0;
 }
 
 //set design energy
-static void set_design_energy(uint16_t design_energy)
+static int set_design_energy(uint16_t design_energy)
 {
     uint8_t data[32];
     uint8_t msb = design_energy >> 8 ;
@@ -771,7 +946,7 @@ static void set_design_energy(uint16_t design_energy)
     if(p_ret_val == NULL)
     {
         printf("Error set_design_energy : read_flash_block\n");
-        return NULL;
+        return -1;
     }
     
     for(uint8_t i = 0; i < 32; i++)
@@ -783,23 +958,25 @@ static void set_design_energy(uint16_t design_energy)
     data[14] = lsb; //lsb
 
     int ret_val = write_flash_block(0x30, 0x0d,data);
-    if(ret_val == NULL)
+    if(ret_val == -1)
     {
         printf("Error set_design_energy");
-        return NULL;
+        return -1;
     }
+
+    return 0;
 }
 
 //set VOLTSEL BIT in pack_configuration register
-static void set_voltsel(uint16_t dummy_value)
+static int set_voltsel(uint16_t dummy_value)
 {   
     uint8_t data[32];
     uint16_t pack_configuration = read_pack_configuration();
     //usleep(wait_time);
-    if(pack_configuration == NULL)
+    if(pack_configuration == -1)
     {
         printf("Error set voltsel : read pack configuration\n");
-        return NULL;
+        return -1;
     }
 
     pack_configuration = pack_configuration | 0x0800;
@@ -812,7 +989,7 @@ static void set_voltsel(uint16_t dummy_value)
     if(p_ret_val == NULL)
     {
         printf("Error set_voltsel : read_flash_block\n");
-        return NULL;
+        return -1;
     }
 
 
@@ -826,17 +1003,19 @@ static void set_voltsel(uint16_t dummy_value)
 
     int ret_val = write_flash_block(0x40, 0x00,data);
     //usleep(wait_time);
-    if(ret_val == NULL)
+    if(ret_val == -1)
     {
         printf("Error set_voltsel : write_flash_block\n");
-        return NULL;
+        return -1;
     }
+
+    return 0;
 
 }
 
 
 //set flash update ok cell volt
-void set_flash_update_ok_voltage(uint16_t flash_update_ok_voltage)
+static int set_flash_update_ok_voltage(uint16_t flash_update_ok_voltage)
 {
     uint8_t data[32];
     uint8_t msb = flash_update_ok_voltage >> 8 ;
@@ -847,7 +1026,7 @@ void set_flash_update_ok_voltage(uint16_t flash_update_ok_voltage)
     if(p_ret_val == NULL)
     {
         printf("Error set_flash_update_ok_voltage : read_flash_block\n");
-        return NULL;
+        return -1;
     }
     
     for(uint8_t i = 0; i < 32; i++)
@@ -860,55 +1039,94 @@ void set_flash_update_ok_voltage(uint16_t flash_update_ok_voltage)
 
     int ret_val = write_flash_block(0x44, 0x00,data);
     //usleep(wait_time);
-    if(ret_val == NULL)
+    if(ret_val == -1)
     {
         printf("Error set_flash_update_ok_voltage : write_flash_block\n");
-        return NULL;
+        return -1;
     }
 
-
+    return 0;
 
  }
 
 
-void gauge_verify_and_calibrate()
+int gauge_verify_and_calibrate()
 {
-    gauge_unlock();
+    int ret_val;
+    ret_val = gauge_unlock();
+    if(ret_val == -1)
+    {
+        return -1;
+    }
 
     // setting flash update ok voltage
 
-    verify_calibrate_func(read_flash_update_ok_voltage,set_flash_update_ok_voltage,1500);
+    ret_val =  verify_calibrate_func(read_flash_update_ok_voltage,set_flash_update_ok_voltage,1500);
+    if(ret_val == -1)
+    {
+        return -1;
+    }
 
 
     // set voltsel bit
-    verify_calibrate_func(read_voltsel,set_voltsel,1);
-
+    ret_val =  verify_calibrate_func(read_voltsel,set_voltsel,1);
+    if(ret_val == -1)
+    {
+        return -1;
+    }
 
     // set series cell
-    verify_calibrate_func(read_series_cell,set_series_cell,4);
+    ret_val =  verify_calibrate_func(read_series_cell,set_series_cell,4);
+    if(ret_val == -1)
+    {
+        return -1;
+    }
+
 
     // set voltage divider
-    verify_calibrate_func(readVDivider,set_vdivider,37364);
+    ret_val =  verify_calibrate_func(readVDivider,set_vdivider,37364);
+    if(ret_val == -1)
+    {
+        return -1;
+    }
 
 
     // set design energy scale
-    verify_calibrate_func(read_design_energy_scale,set_design_energy_scale,10);
+    ret_val =  verify_calibrate_func(read_design_energy_scale,set_design_energy_scale,10);
+    if(ret_val == -1)
+    {
+        return -1;
+    }
 
 
     // set design capacity
-    verify_calibrate_func(read_design_capacity,set_design_capacity,20000);
+    ret_val =  verify_calibrate_func(read_design_capacity,set_design_capacity,20000);
+    if(ret_val == -1)
+    {
+        return -1;
+    }
 
     // set design energy
-    verify_calibrate_func(read_design_energy,set_design_energy,25200);
+    ret_val =  verify_calibrate_func(read_design_energy,set_design_energy,25200);
+    if(ret_val == -1)
+    {
+        return -1;
+    }
 
     printf("Successfully done calibration\n");
 
-    calibrated_data();
+    ret_val =  calibrated_data();
+    if(ret_val == -1)
+    {
+        return -1;
+    }
+
+    return 0;
 
 }
 
 
-static void verify_calibrate_func(uint16_t (*read_func)(), void (*set_func)(uint16_t),uint16_t value)
+static int verify_calibrate_func(int (*read_func)(), int (*set_func)(uint16_t),uint16_t value)
 {
 
     uint8_t attempt = 0;
@@ -924,7 +1142,9 @@ static void verify_calibrate_func(uint16_t (*read_func)(), void (*set_func)(uint
     if(attempt>=3)
     {
         failed_to_calibrate(value);
+        return -1;
     }
+    return 0;
 }
 
 static void failed_to_calibrate(uint16_t value)
@@ -959,21 +1179,70 @@ static void failed_to_calibrate(uint16_t value)
     }
 }
 
-static void calibrated_data()
+static int calibrated_data()
 {
-    printf("flash update voltage : %d\n",read_flash_update_ok_voltage());
+    int ret_val = read_flash_update_ok_voltage();
+    if(ret_val == -1)
+    {
+        printf("Error calibrated dada : read_flash_update_ok_voltage\n");
+        return -1;
+    }
+    printf("flash update voltage : %d\n",ret_val);
 
-    printf("voltsel : %x\n",read_voltsel());
+    ret_val = read_voltsel();
+    if(ret_val == -1)
+    {
+        printf("Error calibrated dada : read_voltsel\n");
+        return -1;
+       
+    }
+    printf("voltsel : %x\n",ret_val);
 
-    printf("series cell : %x\n",read_series_cell());
+    ret_val = read_series_cell();
+    if(ret_val == -1)
+    {
+        printf("Error calibrated dada : read_series_cell\n");
+        return -1;
+    }
+    printf("series cell : %x\n",ret_val);
 
-    printf("vdivider : %d\n",readVDivider());
+    ret_val = readVDivider();
+    if(ret_val == -1)
+    {
+        printf("Error calibrated dada : readVdivider\n");
+        return -1;
+        
+    }
+    printf("vdivider : %d\n",ret_val );
+    
+    ret_val = read_design_energy_scale();
+    if(ret_val == -1)
+    {
+        printf("Error calibrated dada : read_design_energy_scale\n");
+        return -1;
+        
+    }
+    printf("design energy scale: %d\n",ret_val);
 
-    printf("design energy scale: %d\n",read_design_energy_scale());
+    ret_val = read_design_capacity();
+    if(ret_val == -1)
+    {
+        printf("Error calibrated dada : read_design_capacity\n");
+        return -1;
+        
+    }
+    printf("design capacity : %d\n",ret_val);
 
-    printf("design capacity : %d\n",read_design_capacity());
+    ret_val = read_design_energy();
+    if(ret_val == -1)
+    {
+        printf("Error calibrated dada : read_design_energy\n");
+        return -1;
+        
+    }
+    printf("design energy: %d\n",ret_val);
 
-    printf("design energy: %d\n",read_design_energy());
+    return 0;
 
 }
 

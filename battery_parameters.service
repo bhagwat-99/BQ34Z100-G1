@@ -1,0 +1,21 @@
+/*      @author         Bhagwat Shinde
+        name            battery_parameters.service
+        Description     write battery parameters to the ram file /tmp/battery_parameters
+        date            09 May 2022
+        Dependancy      gauge_configure.service
+        How to use      Enable the service
+*/
+
+[Unit]
+Description = battery parameter monitoring service
+After = gauge_configure.service
+StartLimitIntervalSec=30
+StartLimitBurst=2
+
+
+[Service]
+ExecStart = /home/root/bhagwatws/battery_parameters
+Restart=on-failure
+
+[Install]
+WantedBy = multi-user.target

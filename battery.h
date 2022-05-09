@@ -63,109 +63,110 @@ typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 
 
-void gauge_seal();
+int gauge_seal();
 
-static void gauge_unseal();
+static int gauge_unseal();
 
-static void gauge_full_access();
+static int gauge_full_access();
 
-void gauge_unlock();
+int gauge_unlock();
 
-void reset_guage();
+int reset_guage();
 
 
 
 //autocalibration fuctions
 
-static void board_offset();
+static int board_offset();
 
-static void cc_offset();
+static int cc_offset();
 
-static void offset_calibration();
+static int offset_calibration();
 
-static void enable_calibration();
+static int enable_calibration();
 
-static void enter_calibration();
+static int enter_calibration();
 
-static void calibration_exit();
+static int calibration_exit();
 
-static void it_enable();
+static int it_enable();
 
-void autocalibrate();
+int autocalibrate();
 
 
 static int enable_block_data_control();
 
-static uint16_t read_control(uint16_t control_subcommand);
+static int read_control(uint16_t control_subcommand);
 
 static uint8_t checksum(uint8_t * checksum_data);
 
 static unsigned char * read_flash_block(uint8_t sub_class, uint8_t offset);
 
-static uint8_t write_flash_block(uint8_t sub_class, uint8_t offset, uint8_t * data);
+static int write_flash_block(uint8_t sub_class, uint8_t offset, uint8_t * data);
 
-static uint16_t readVDivider();
+static int readVDivider();
 
-static uint16_t read_pack_configuration();
+static int read_pack_configuration();
 
-static uint16_t read_voltsel();
+static int read_voltsel();
 
-static uint16_t read_design_capacity();
+static int read_design_capacity();
 
-static uint16_t read_design_energy();
+static int read_design_energy();
 
-static uint16_t read_flash_update_ok_voltage();
+static int read_flash_update_ok_voltage();
 
-static uint16_t read_series_cell();
+static int read_series_cell();
 
-static uint16_t read_design_energy_scale();
+static int read_design_energy_scale();
 
-static void set_vdivider(uint16_t v_divider);
+static int set_vdivider(uint16_t v_divider);
 
-static void set_series_cell(uint16_t series_cell);
+static int set_series_cell(uint16_t series_cell);
 
-static void set_design_capacity(uint16_t design_capacity);
+static int set_design_capacity(uint16_t design_capacity);
 
-static void set_design_energy_scale(uint16_t design_energy_scale);
+static int set_design_energy_scale(uint16_t design_energy_scale);
 
-static void set_design_energy(uint16_t design_energy);
+static int set_design_energy(uint16_t design_energy);
 
-static void set_voltsel(uint16_t dummy_value);
+static int set_voltsel(uint16_t dummy_value);
 
-static void set_flash_update_ok_voltage(uint16_t flash_update_ok_voltage);
+static int set_flash_update_ok_voltage(uint16_t flash_update_ok_voltage);
 
-void gauge_verify_and_calibrate();
+int gauge_verify_and_calibrate();
 
-static void verify_calibrate_func(uint16_t (*read_func)(), void (*set_func)(uint16_t),uint16_t value);
+static int verify_calibrate_func(int (*read_func)(), int (*set_func)(uint16_t),uint16_t value);
 
 static void failed_to_calibrate(uint16_t value);
 
-static void calibrated_data();
+static int calibrated_data();
 
 uint8_t soc();
 
 
 
-uint16_t control_status();
+int control_status();
 
-uint16_t device_type();
+int device_type();
 
 
 //battery parameter fuctions
 
-uint16_t internal_temperature();
+int internal_temperature();
 
-uint16_t temperature();
+int temperature();
 
-uint16_t voltage();
+int voltage();
 
-int16_t current();
+int current();
 
-int16_t average_current();
+int average_current();
 
-void gauge_parameters();
+//int gauge_parameters();
 
 int write_to_file();
+
 
 
 #endif

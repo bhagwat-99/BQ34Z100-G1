@@ -13,10 +13,29 @@ int main()
         {
                 return -1;
         }
+
+        int ret_val;
+        ret_val = gauge_unlock();
+        if(ret_val == -1)
+        {
+                return -1;
+        }
+
         //verify and set all the parameter. Alert when fail to set
-        gauge_verify_and_calibrate();
+        ret_val = gauge_verify_and_calibrate();
+        if(ret_val == -1)
+        {
+                return -1;
+        }
 
         //autocalibrate();
-        i2c_close(i2c_bus);
+        ret_val = i2c_close(i2c_bus);
+        if(ret_val == -1)
+        {
+                return -1;
+        }
+
         return 0;
 }
+
+

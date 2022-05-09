@@ -9,7 +9,6 @@ char *i2c_bus = "/dev/apalis-i2c1";
 //char *i2c_bus = "/dev/i2c-0";
 
 
-
 int main()
 {
         // start the i2c bus
@@ -21,10 +20,18 @@ int main()
         //gauge_parameters();
         
         // write battery parameters to file
-        write_to_file();
+		int ret_val = write_to_file();
+        if(ret_val == -1)
+		{
+			return -1;
+		}
 
         // close the i2c bus
-        ifi2c_close(i2c_bus);
+        if(i2c_close(i2c_bus))
+        {
+			printf("Error closing i2c bus\n");
+			return -1;
+        }
         return 0;
 }
 

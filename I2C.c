@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "I2C.h"
 
+
 // i2c bus file descriptor
 int fd_i2c = -1;
 
@@ -21,6 +22,7 @@ int i2c_init(char *i2c_bus)
 }
 
 
+
 // close the i2c bus
 //i2c_bus - i2c adaper 
 int i2c_close(char *i2c_bus) 
@@ -32,6 +34,8 @@ int i2c_close(char *i2c_bus)
     }
     return 0;
 }
+
+
 
 
 
@@ -60,7 +64,7 @@ int i2c_write(unsigned char slave_addr, unsigned char reg, unsigned char *data, 
     if (ioctl(fd_i2c, I2C_RDWR, &msgset) < 0)
     {
         perror("ioctl(I2C_RDWR) in i2c_write");
-        return NULL;
+        return -1;
     }
 
     return 0;
