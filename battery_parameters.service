@@ -1,14 +1,13 @@
-
 [Unit]
-Description = battery parameter monitoring service
-After = gauge_configure.service
+Description=battery parameter monitoring service
+After=gauge_configure.service devdetect.service
+Requires=gauge_configure.service devdetect.service
 StartLimitIntervalSec=30
 StartLimitBurst=2
 
-
 [Service]
-ExecStart = /usr/sbin/sensor_code/battery_parameters
+ExecStart=/usr/sbin/power/battery_parameters
 Restart=on-failure
 
 [Install]
-WantedBy = multi-user.target
+WantedBy=multi-user.target

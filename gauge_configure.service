@@ -1,19 +1,13 @@
-/*      @author         Bhagwat Shinde
-        name            gauge_configure.service
-        Description     configure the fuel gauge
-        date            09 May 2022
-        Used by         battery_parameters.service
-        enable the service
-*/
-
 [Unit]
-Description= fuel gauge configure service
-Before = battery_parameters.service
+Description=fuel gauge configure service
+After=devdetect.service
+Requires=devdetect.service
+#Before=battery_parameters.service
 
 
 [Service]
 Type=oneshot
-ExecStart=/usr/sbin/sensor_code/gauge_configure
+ExecStart=/usr/sbin/power/gauge_configure
 
 [Install]
 WantedBy=multi-user.target
