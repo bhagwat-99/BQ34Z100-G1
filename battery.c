@@ -634,7 +634,7 @@ int write_to_file()
                 uint16_t temp = (uint16_t)ret_val;
                 float internal_temp = (float)temp*0.1-273.15;
                 //writing internal temp to file
-                if(fprintf(fptr,"Temperature : %0.2f C\n",internal_temp )<0)
+                if(fprintf(fptr,"Temperature:%0.2f\n",internal_temp )<0)
                 {   
                         printf("error writing temperature to file \n");
                         return -1;     
@@ -649,7 +649,7 @@ int write_to_file()
                 }
                 uint16_t volt = (uint16_t)ret_val;
                 //writing voltage to file
-                if(fprintf(fptr,"Voltage : %d mV\n",volt )<0)
+                if(fprintf(fptr,"Voltage:%d\n",volt )<0)
                 {   
                         printf("error writing voltage to file \n");
                         return -1;     
@@ -664,7 +664,7 @@ int write_to_file()
                 int16_t average_current_value = (int16_t)ret_val;
                 
                 //writing average current to file
-                if(fprintf(fptr,"Average Current : %d mA\n",average_current_value )<0)
+                if(fprintf(fptr,"Average_Current:%d\n",average_current_value )<0)
                 {   
                     printf("error writing average current to file \n");
                     return -1;     
