@@ -680,7 +680,7 @@ int write_to_file()
                 int16_t current_value = (int16_t)ret_val;
                 
                 //writing current to file
-                if(fprintf(fptr,"Current : %d mA\n",current_value )<0)
+                if(fprintf(fptr,"Current:%d\n",current_value )<0)
                 {   
                     printf("error writing current to file \n");
                     return -1;     
