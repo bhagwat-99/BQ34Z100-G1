@@ -16,7 +16,7 @@
 #include "I2C.h"
 
 
-#define RAM_FILE_PATH   "/tmp/battery_parameters"
+#define RAM_FILE_PATH   "/var/tmp/battery_parameters"
 #define FILE_MODE       "w"
 
 //device address
