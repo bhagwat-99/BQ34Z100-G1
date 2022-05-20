@@ -2,6 +2,7 @@
 #define I2C_H
 
 #include <stdio.h> // printf()
+#include <stdlib.h> // printf()
 #include <sys/types.h> // open()
 #include <sys/stat.h> // open()
 #include <fcntl.h> // open()

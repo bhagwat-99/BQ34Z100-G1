@@ -16,7 +16,7 @@ int i2c_init(char *i2c_bus)
     if ((fd_i2c = open(i2c_bus, O_RDWR)) < 0)
     {
         printf("Failed to open %s\n.",i2c_bus);
-        return -1;
+        exit(0);;
     }
     return 0;
 }
@@ -30,7 +30,7 @@ int i2c_close(char *i2c_bus)
     if (close(fd_i2c) < 0)
     {
         printf("Failed to close %s\n.",i2c_bus);
-        return -1;
+        exit(0);
     }
     return 0;
 }

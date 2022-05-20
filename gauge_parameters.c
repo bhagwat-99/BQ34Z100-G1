@@ -12,10 +12,7 @@ char *i2c_bus = "/dev/apalis-i2c1";
 int main()
 {
         // start the i2c bus
-        if(i2c_init(i2c_bus)<0)
-        {
-                return -1;
-        }
+        i2c_init(i2c_bus);
 
         //gauge_parameters();
         
@@ -27,11 +24,8 @@ int main()
 		}
 
         // close the i2c bus
-        if(i2c_close(i2c_bus))
-        {
-			printf("Error closing i2c bus\n");
-			return -1;
-        }
+        i2c_close(i2c_bus);
+       
         return 0;
 }
 

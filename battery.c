@@ -3,6 +3,9 @@
 
 #define wait_time 1000000/4 // unit - usec wait_time - (1sec)
 
+
+const char * DATA_OUT_FORMAT = "{\n\t\"Voltage\":\"%d\", \n\t\"Internal_temperature(C)\":\"%.2f\", \n\t\"Average_current\":\"%d\"\n}\n";
+
 // seal the gauge - don't execute the function if device already in sealed state
 int gauge_seal()
 {
@@ -90,14 +93,14 @@ int gauge_unlock()
     ret_val = gauge_unseal();
     if(ret_val == -1)
     {
-        perror("gauge unlock failed");
-        return -1;
+        perror("Error gauge unlock : gauge unseal\n");
+        exit(1);
     }
     ret_val = gauge_full_access();
     if(ret_val == -1)
     {
-        perror("gauge unlock failed");
-        return -1;
+        perror("Error gauge unlock : gauge full access\n");
+        exit(1);;
     }
     return 0;
 }
@@ -634,11 +637,11 @@ int write_to_file()
                 uint16_t temp = (uint16_t)ret_val;
                 float internal_temp = (float)temp*0.1-273.15;
                 //writing internal temp to file
-                if(fprintf(fptr,"Temperature:%0.2f\n",internal_temp )<0)
-                {   
-                        printf("error writing temperature to file \n");
-                        return -1;     
-                }
+                // if(fprintf(fptr,"Temperature:%0.2f\n",internal_temp )<0)
+                // {   
+                //         printf("error writing temperature to file \n");
+                //         return -1;     
+                // }
 
 
                 ret_val = voltage();
@@ -649,11 +652,11 @@ int write_to_file()
                 }
                 uint16_t volt = (uint16_t)ret_val;
                 //writing voltage to file
-                if(fprintf(fptr,"Voltage:%d\n",volt )<0)
-                {   
-                        printf("error writing voltage to file \n");
-                        return -1;     
-                }
+                // if(fprintf(fptr,"Voltage:%d\n",volt )<0)
+                // {   
+                //         printf("error writing voltage to file \n");
+                //         return -1;     
+                // }
 
                 ret_val = average_current();
                 if(ret_val == -1)
@@ -663,12 +666,12 @@ int write_to_file()
                 }
                 int16_t average_current_value = (int16_t)ret_val;
                 
-                //writing average current to file
-                if(fprintf(fptr,"Average_Current:%d\n",average_current_value )<0)
-                {   
-                    printf("error writing average current to file \n");
-                    return -1;     
-                }
+                // //writing average current to file
+                // if(fprintf(fptr,"Average_Current:%d\n",average_current_value )<0)
+                // {   
+                //     printf("error writing average current to file \n");
+                //     return -1;     
+                // }
 
 
                 ret_val = current();
@@ -679,12 +682,20 @@ int write_to_file()
                 }
                 int16_t current_value = (int16_t)ret_val;
                 
-                //writing current to file
-                if(fprintf(fptr,"Current:%d\n",current_value )<0)
-                {   
-                    printf("error writing current to file \n");
-                    return -1;     
+                // //writing current to file
+                // if(fprintf(fptr,"Current:%d\n",current_value )<0)
+                // {   
+                //     printf("error writing current to file \n");
+                //     return -1;     
+                // }
+
+                // writing to file in json format
+                if(fprintf(fptr,DATA_OUT_FORMAT, volt, internal_temp, average_current_value)<0)
+                {
+                        printf("Error : write to file \n");
+                        exit(1);
                 }
+
 
                 if(fclose(fptr) == EOF)
                 {
@@ -1053,11 +1064,7 @@ static int set_flash_update_ok_voltage(uint16_t flash_update_ok_voltage)
 int gauge_verify_and_calibrate()
 {
     int ret_val;
-    ret_val = gauge_unlock();
-    if(ret_val == -1)
-    {
-        return -1;
-    }
+    gauge_unlock();
 
     // setting flash update ok voltage
 

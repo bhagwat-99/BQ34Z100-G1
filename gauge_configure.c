@@ -9,17 +9,12 @@ char *i2c_bus = "/dev/apalis-i2c1";
 
 int main()
 {
-        if (i2c_init(i2c_bus) < 0)
-        {
-                return -1;
-        }
+        // open the i2c bus
+        i2c_init(i2c_bus);
+        
 
         int ret_val;
-        ret_val = gauge_unlock();
-        if(ret_val == -1)
-        {
-                return -1;
-        }
+        gauge_unlock();
 
         //verify and set all the parameter. Alert when fail to set
         ret_val = gauge_verify_and_calibrate();
@@ -29,11 +24,10 @@ int main()
         }
 
         //autocalibrate();
-        ret_val = i2c_close(i2c_bus);
-        if(ret_val == -1)
-        {
-                return -1;
-        }
+
+        //close the i2c bus
+        i2c_close(i2c_bus);
+        
 
         return 0;
 }
